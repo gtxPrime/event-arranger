@@ -1,0 +1,922 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Admin — LocalHost Festival</title>
+<link rel="stylesheet" href="/shared/styles.css"/>
+<style>
+body { background:var(--bg); display:flex; min-height:100vh; }
+
+/* Login */
+#login-screen {
+  position:fixed; inset:0; z-index:500; background:var(--bg);
+  display:flex; align-items:center; justify-content:center; padding:40px;
+}
+.login-box { width:100%; max-width:380px; }
+
+/* Sidebar */
+#sidebar {
+  width:240px; min-height:100vh; border-right:1px solid var(--accent-border);
+  padding:32px 0; display:flex; flex-direction:column; flex-shrink:0;
+}
+.sidebar-logo { font-family:var(--font-h); font-size:1rem; letter-spacing:-0.02em; padding:0 24px 32px; text-transform:uppercase; border-bottom:1px solid var(--accent-border); }
+.sidebar-logo small { display:block; font-family:var(--font-b); font-size:.65rem; letter-spacing:.12em; text-transform:uppercase; color:var(--accent-dim); margin-top:2px; }
+.nav-link {
+  display:flex; align-items:center; gap:12px; padding:12px 24px;
+  color:var(--accent-dim); font-size:.85rem; cursor:pointer; transition:background .15s, color .15s;
+  border-left:2px solid transparent;
+}
+.nav-link:hover { background:var(--accent-subtle); color:var(--accent); }
+.nav-link.active { color:var(--accent); border-left-color:var(--accent); background:var(--accent-subtle); }
+.nav-link .icon { font-size:1rem; width:20px; text-align:center; }
+
+/* Main content */
+#main { flex:1; overflow-y:auto; padding:40px; }
+.panel { display:none; }
+.panel.active { display:block; }
+
+/* Stats grid */
+.stats-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(180px,1fr)); gap:16px; margin-bottom:32px; }
+.stat-card { border:1px solid var(--accent-border); padding:24px; }
+.stat-card .stat-val { font-family:var(--font-h); font-size:2.8rem; color:var(--accent); line-height:1; margin-bottom:8px; }
+.stat-card .stat-label { font-size:.7rem; text-transform:uppercase; letter-spacing:.1em; color:var(--accent-dim); }
+.stat-card .stat-sub { font-size:.8rem; color:var(--accent-dim); margin-top:4px; }
+
+/* Capacity mini-bar in stat card */
+.stat-bar { height:3px; background:var(--accent-border); margin-top:12px; }
+.stat-bar-fill { height:100%; background:var(--accent); transition:width .8s ease; }
+
+/* Toggle row */
+.toggle-row {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:16px 0; border-bottom:1px solid var(--accent-border);
+}
+.toggle-row:last-child { border-bottom:none; }
+.toggle-info { max-width:70%; }
+.toggle-info .toggle-title { font-size:.875rem; font-weight:600; }
+.toggle-info .toggle-desc { font-size:.75rem; color:var(--accent-dim); margin-top:2px; }
+
+/* Registrations */
+.reg-filters { display:flex; gap:12px; flex-wrap:wrap; margin-bottom:20px; align-items:center; }
+.filter-chip {
+  padding:6px 16px; border:1px solid var(--accent-border); font-size:.75rem;
+  text-transform:uppercase; letter-spacing:.08em; cursor:pointer; transition:.15s;
+}
+.filter-chip:hover, .filter-chip.active { background:var(--accent-subtle); border-color:var(--accent-dim); }
+.action-btns { display:flex; gap:6px; }
+
+/* Modal */
+.modal-overlay { position:fixed; inset:0; z-index:300; background:rgba(9,9,9,.85); display:none; align-items:center; justify-content:center; padding:20px; }
+.modal-overlay.show { display:flex; }
+.modal-box { background:#111; border:1px solid var(--accent-border); padding:32px; width:100%; max-width:500px; }
+
+/* Guest code URL */
+.code-url-box { background:var(--accent-subtle); padding:12px; font-size:.8rem; word-break:break-all; margin-top:12px; position:relative; }
+.copy-badge { position:absolute; top:8px; right:8px; cursor:pointer; font-size:.65rem; border:1px solid var(--accent-border); padding:2px 8px; }
+
+/* Pagination */
+.pagination { display:flex; gap:8px; align-items:center; margin-top:16px; font-size:.8rem; }
+.page-btn { padding:4px 12px; border:1px solid var(--accent-border); cursor:pointer; }
+.page-btn:hover { background:var(--accent-subtle); }
+
+/* Draw panel */
+.draw-box { max-width:500px; }
+.draw-pool-count { font-family:var(--font-h); font-size:4rem; color:var(--accent); text-align:center; padding:32px; border:1px solid var(--accent-border); margin:24px 0; }
+
+/* Input with button inline */
+.input-with-btn { display:flex; gap:8px; }
+.input-with-btn input { flex:1; }
+
+@media (max-width:768px) {
+  #sidebar { display:none; }
+  #main { padding:20px; }
+}
+</style>
+</head>
+<body>
+
+<!-- Login Screen -->
+<div id="login-screen">
+  <div class="login-box">
+    <div style="font-family:var(--font-h);font-size:1.5rem;margin-bottom:8px">LocalHost</div>
+    <div style="font-size:.7rem;letter-spacing:.15em;text-transform:uppercase;color:var(--accent-dim);margin-bottom:32px">Admin Dashboard</div>
+    <div id="login-alert" class="alert"></div>
+    <div class="form-group"><label>Username</label><input id="login-user" type="text" placeholder="admin"/></div>
+    <div class="form-group mt-4"><label>Password</label><input id="login-pass" type="password" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"/></div>
+    <button class="btn btn-full mt-4" onclick="doLogin()">Login →</button>
+  </div>
+</div>
+
+<!-- Main layout (hidden until logged in) -->
+<div id="app" style="display:none;width:100%">
+
+<!-- Sidebar -->
+<nav id="sidebar">
+  <div class="sidebar-logo">LocalHost <small>Admin</small></div>
+  <div style="padding:16px 0;flex:1">
+    <div class="nav-link active" onclick="showPanel('overview')" id="nav-overview"><span class="icon">◈</span> Overview</div>
+    <div class="nav-link" onclick="showPanel('registrations')" id="nav-registrations"><span class="icon">◉</span> Registrations</div>
+    <div class="nav-link" onclick="showPanel('draw')" id="nav-draw"><span class="icon">◐</span> Lucky Draw</div>
+    <div class="nav-link" onclick="showPanel('guest-codes')" id="nav-guest-codes"><span class="icon">◆</span> Guest Codes</div>
+    <div class="nav-link" onclick="showPanel('volunteer-codes')" id="nav-volunteer-codes"><span class="icon">◇</span> Volunteers</div>
+    <div class="nav-link" onclick="showPanel('bulk')" id="nav-bulk"><span class="icon">▦</span> Bulk Upload</div>
+    <div class="nav-link" onclick="showPanel('audit')" id="nav-audit"><span class="icon">▤</span> Audit Log</div>
+    <div class="nav-link" onclick="showPanel('settings')" id="nav-settings"><span class="icon">◎</span> Settings</div>
+  </div>
+  <div style="padding:16px 24px;border-top:1px solid var(--accent-border)">
+    <button class="btn btn-outline btn-sm btn-full" onclick="adminLogout()">Logout</button>
+  </div>
+</nav>
+
+<!-- Main Content -->
+<main id="main">
+
+  <!-- ── OVERVIEW ── -->
+  <div class="panel active" id="panel-overview">
+    <h2 style="margin-bottom:24px">Overview</h2>
+    <div class="stats-grid" id="stats-grid">
+      <div class="stat-card"><div class="stat-val">—</div><div class="stat-label">Free Confirmed</div></div>
+      <div class="stat-card"><div class="stat-val">—</div><div class="stat-label">In Draw Pool</div></div>
+      <div class="stat-card"><div class="stat-val">—</div><div class="stat-label">Paid Confirmed</div></div>
+      <div class="stat-card"><div class="stat-val">—</div><div class="stat-label">Total Checked In</div></div>
+    </div>
+    <button class="btn btn-outline btn-sm" onclick="loadStats()">↺ Refresh Stats</button>
+
+    <hr class="divider"/>
+    <h3 style="margin-bottom:20px">Quick Tier Toggles</h3>
+    <div id="quick-toggles"></div>
+  </div>
+
+  <!-- ── REGISTRATIONS ── -->
+  <div class="panel" id="panel-registrations">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;flex-wrap:wrap;gap:12px">
+      <h2>Registrations</h2>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-outline btn-sm" onclick="exportCSV()">↓ Export CSV</button>
+      </div>
+    </div>
+    <div class="reg-filters">
+      <input type="text" id="reg-search" placeholder="Search name / email / serial…" style="max-width:280px" oninput="debounceSearch()"/>
+      <div class="filter-chip active" onclick="setFilter('status',null,this)">All</div>
+      <div class="filter-chip" onclick="setFilter('status','approved',this)">Approved</div>
+      <div class="filter-chip" onclick="setFilter('status','confirmed',this)">Confirmed</div>
+      <div class="filter-chip" onclick="setFilter('status','pending_draw',this)">Draw Pool</div>
+      <div class="filter-chip" onclick="setFilter('status','checked_in',this)">Checked In</div>
+      <div class="filter-chip" onclick="setFilter('status','expired',this)">Expired</div>
+      <div class="filter-chip" onclick="setFilter('type','free',this)">Free</div>
+      <div class="filter-chip" onclick="setFilter('type','paid',this)">Paid</div>
+      <div class="filter-chip" onclick="setFilter('type','guest',this)">VIP</div>
+      <div class="filter-chip" onclick="setFilter('type','volunteer',this)">Vol</div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Serial</th><th>Name</th><th>Email</th><th>Type</th><th>Status</th><th>Registered</th><th>Actions</th></tr></thead>
+        <tbody id="reg-table-body"></tbody>
+      </table>
+    </div>
+    <div class="pagination">
+      <span id="reg-total-label">— records</span>
+      <button class="page-btn" onclick="changePage(-1)">←</button>
+      <span id="page-label">1</span>
+      <button class="page-btn" onclick="changePage(1)">→</button>
+    </div>
+  </div>
+
+  <!-- ── LUCKY DRAW ── -->
+  <div class="panel" id="panel-draw">
+    <h2 style="margin-bottom:8px">Lucky Draw</h2>
+    <p>Run the draw to randomly select winners from the pending pool.</p>
+    <div class="draw-box">
+      <div class="draw-pool-count" id="draw-pool-count">—</div>
+      <p style="text-align:center;margin-top:-8px;margin-bottom:24px">registrants in the draw pool</p>
+      <div id="draw-alert" class="alert"></div>
+      <div class="form-group"><label>Number of Winners to Select (leave blank for all available seats)</label>
+        <input id="draw-count" type="number" min="1" placeholder="Auto — fills all available seats"/>
+      </div>
+      <button class="btn btn-full mt-4" onclick="runDrawNow()">Run Draw Now ⚡</button>
+      <p style="margin-top:12px;font-size:.75rem;color:var(--accent-dim)">
+        Winners are emailed automatically. Losers get a "not selected" notification.
+      </p>
+      <div id="draw-results" style="display:none;margin-top:24px">
+        <h4 style="margin-bottom:12px">Draw Results</h4>
+        <div id="draw-winners-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── GUEST CODES ── -->
+  <div class="panel" id="panel-guest-codes">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;flex-wrap:wrap;gap:12px">
+      <h2>Guest List Codes</h2>
+      <button class="btn btn-sm" onclick="openModal('create-guest-code-modal')">+ New Code</button>
+    </div>
+    <p style="margin-bottom:24px">Each code generates a hidden URL. Share it with your guests. Revoking a code instantly invalidates all QRs issued under it.</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Label</th><th>Created By</th><th>Used / Max</th><th>+1</th><th>Status</th><th>URL</th><th>Actions</th></tr></thead>
+        <tbody id="guest-codes-body"></tbody>
+      </table>
+    </div>
+    <div id="gc-alert" class="alert mt-4"></div>
+  </div>
+
+  <!-- ── VOLUNTEER CODES ── -->
+  <div class="panel" id="panel-volunteer-codes">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;flex-wrap:wrap;gap:12px">
+      <h2>Volunteer Codes</h2>
+      <button class="btn btn-sm" onclick="openModal('create-vol-code-modal')">+ New Code</button>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Code</th><th>Linked Email</th><th>Created By</th><th>Used</th><th>Status</th><th>Actions</th></tr></thead>
+        <tbody id="vol-codes-body"></tbody>
+      </table>
+    </div>
+    <div id="vc-alert" class="alert mt-4"></div>
+  </div>
+
+  <!-- ── BULK UPLOAD ── -->
+  <div class="panel" id="panel-bulk">
+    <h2 style="margin-bottom:8px">Bulk CSV Upload</h2>
+    <p style="margin-bottom:24px">Upload a CSV with columns: <code style="color:var(--accent)">name, email, phone</code> to bulk-create confirmed tickets.</p>
+    <div class="card" style="margin-bottom:20px">
+      <div class="form-group"><label>Ticket Type for Uploaded Entries</label>
+        <select id="bulk-type"><option value="guest">Special Guest (VIP)</option><option value="volunteer">Volunteer</option><option value="free">Free</option><option value="paid">Paid</option></select>
+      </div>
+    </div>
+    <div id="drop-zone" style="border:1px dashed var(--accent-border);padding:60px;text-align:center;cursor:pointer;transition:.2s" onclick="document.getElementById('csv-file').click()"
+      ondragover="event.preventDefault();this.style.borderColor='var(--accent-dim)'" ondragleave="this.style.borderColor='var(--accent-border)'" ondrop="handleDrop(event)">
+      <div style="font-size:2rem;margin-bottom:12px">📄</div>
+      <p>Click to select CSV file or drag & drop here</p>
+      <p style="font-size:.75rem;margin-top:8px">Max 5MB</p>
+    </div>
+    <input type="file" id="csv-file" accept=".csv" style="display:none" onchange="handleFile(this.files[0])"/>
+    <div id="bulk-alert" class="alert mt-4"></div>
+    <div id="bulk-preview" style="display:none;margin-top:16px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <h4 id="bulk-preview-title">Preview</h4>
+        <button class="btn btn-sm" onclick="uploadCSV()">Upload All →</button>
+      </div>
+      <div class="table-wrap"><table><thead><tr><th>Name</th><th>Email</th><th>Phone</th></tr></thead><tbody id="bulk-preview-body"></tbody></table></div>
+    </div>
+    <div id="bulk-results" style="display:none;margin-top:16px"></div>
+  </div>
+
+  <!-- ── AUDIT LOG ── -->
+  <div class="panel" id="panel-audit">
+    <h2 style="margin-bottom:24px">Audit Log</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Time</th><th>Admin</th><th>Action</th><th>Target</th><th>Details</th></tr></thead>
+        <tbody id="audit-body"></tbody>
+      </table>
+    </div>
+    <div class="pagination">
+      <span id="audit-total-label">— records</span>
+      <button class="page-btn" onclick="changeAuditPage(-1)">←</button>
+      <span id="audit-page-label">1</span>
+      <button class="page-btn" onclick="changeAuditPage(1)">→</button>
+    </div>
+  </div>
+
+  <!-- ── SETTINGS ── -->
+  <div class="panel" id="panel-settings">
+    <h2 style="margin-bottom:8px">Settings</h2>
+    <p style="margin-bottom:32px">All changes take effect immediately. No restart required.</p>
+
+    <div id="settings-alert" class="alert"></div>
+    <div id="settings-form"></div>
+    <button class="btn mt-4" onclick="saveSettings()">Save All Settings</button>
+  </div>
+
+</main>
+</div>
+
+<!-- Modals -->
+<div class="modal-overlay" id="create-guest-code-modal">
+  <div class="modal-box">
+    <h3 style="margin-bottom:20px">Create Guest List Code</h3>
+    <div class="form-group"><label>Label (e.g. Press Team, Sponsor A)</label><input id="gc-label" type="text" placeholder="Guest list name"/></div>
+    <div class="form-row mt-4">
+      <div class="form-group"><label>Max Registrations</label><input id="gc-max" type="number" value="10" min="1"/></div>
+      <div class="form-group"><label>Expires At (optional)</label><input id="gc-expires" type="datetime-local"/></div>
+    </div>
+    <div class="mt-4" style="display:flex;gap:24px">
+      <div style="display:flex;align-items:center;gap:10px"><label class="toggle"><input type="checkbox" id="gc-plus-one"/><span class="toggle-slider"></span></label><span style="font-size:.85rem">+1 Allowed</span></div>
+      <div style="display:flex;align-items:center;gap:10px"><label class="toggle"><input type="checkbox" id="gc-auto-approve" checked/><span class="toggle-slider"></span></label><span style="font-size:.85rem">Auto Approve</span></div>
+    </div>
+    <div style="display:flex;gap:12px;margin-top:24px">
+      <button class="btn btn-full" onclick="createGuestCode()">Create Code</button>
+      <button class="btn btn-outline btn-full" onclick="closeModal('create-guest-code-modal')">Cancel</button>
+    </div>
+    <div id="new-code-url" style="display:none" class="mt-4">
+      <p style="font-size:.75rem;color:var(--success);margin-bottom:8px">✓ Code created! Share this URL with your guests:</p>
+      <div class="code-url-box" id="new-code-url-text"></div>
+      <button class="btn btn-sm mt-2" onclick="copyUrl()">Copy URL</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="create-vol-code-modal">
+  <div class="modal-box">
+    <h3 style="margin-bottom:20px">Create Volunteer Code</h3>
+    <div class="form-group"><label>Linked Email (must match exactly at registration)</label><input id="vc-email" type="email" placeholder="volunteer@email.com"/></div>
+    <div class="form-group mt-4"><label>Expires At (optional)</label><input id="vc-expires" type="datetime-local"/></div>
+    <div style="display:flex;gap:12px;margin-top:24px">
+      <button class="btn btn-full" onclick="createVolCode()">Create Code</button>
+      <button class="btn btn-outline btn-full" onclick="closeModal('create-vol-code-modal')">Cancel</button>
+    </div>
+    <div id="new-vol-code" style="display:none;margin-top:16px">
+      <p style="font-size:.75rem;color:var(--success);margin-bottom:8px">✓ Code created! Share with the volunteer:</p>
+      <div class="code-url-box" id="new-vol-code-text"></div>
+      <button class="btn btn-sm mt-2" onclick="copyVolCode()">Copy Code</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="generate-qr-modal">
+  <div class="modal-box">
+    <h3 style="margin-bottom:20px">Generate QR for Guest</h3>
+    <input type="hidden" id="gen-qr-code-id"/>
+    <div class="form-group"><label>Guest Name</label><input id="gen-name" type="text" placeholder="Full name"/></div>
+    <div class="form-group mt-4"><label>Guest Email</label><input id="gen-email" type="email" placeholder="guest@email.com"/></div>
+    <div class="form-group mt-4"><label>Phone (optional)</label><input id="gen-phone" type="tel"/></div>
+    <div class="mt-4" style="display:flex;align-items:center;gap:10px"><label class="toggle"><input type="checkbox" id="gen-plusone"/><span class="toggle-slider"></span></label><span style="font-size:.85rem">+1 Allowed</span></div>
+    <div id="gen-qr-alert" class="alert mt-4"></div>
+    <div style="display:flex;gap:12px;margin-top:24px">
+      <button class="btn btn-full" onclick="genQR()">Generate & Email QR</button>
+      <button class="btn btn-outline btn-full" onclick="closeModal('generate-qr-modal')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Guest Code Modal -->
+<div class="modal-overlay" id="edit-guest-code-modal">
+  <div class="modal-box">
+    <h3 style="margin-bottom:20px">Edit Guest List Code</h3>
+    <input type="hidden" id="edit-gc-id"/>
+    <div class="form-group"><label>Label</label><input id="edit-gc-label" type="text" placeholder="Guest list name"/></div>
+    <div class="form-row mt-4">
+      <div class="form-group"><label>Max Registrations</label><input id="edit-gc-max" type="number" min="1"/></div>
+      <div class="form-group"><label>Expires At (optional)</label><input id="edit-gc-expires" type="datetime-local"/></div>
+    </div>
+    <div class="mt-4" style="display:flex;gap:24px">
+      <div style="display:flex;align-items:center;gap:10px"><label class="toggle"><input type="checkbox" id="edit-gc-plus-one"/><span class="toggle-slider"></span></label><span style="font-size:.85rem">+1 Allowed</span></div>
+      <div style="display:flex;align-items:center;gap:10px"><label class="toggle"><input type="checkbox" id="edit-gc-auto-approve"/><span class="toggle-slider"></span></label><span style="font-size:.85rem">Auto Approve</span></div>
+    </div>
+    <div id="edit-gc-alert" class="alert mt-4"></div>
+    <div style="display:flex;gap:12px;margin-top:24px">
+      <button class="btn btn-full" onclick="saveGuestCodeEdit()">Save Changes</button>
+      <button class="btn btn-outline btn-full" onclick="closeModal('edit-guest-code-modal')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Volunteer Code Modal -->
+<div class="modal-overlay" id="edit-vol-code-modal">
+  <div class="modal-box">
+    <h3 style="margin-bottom:20px">Edit Volunteer Code</h3>
+    <input type="hidden" id="edit-vc-id"/>
+    <div class="form-group"><label>Code (read-only)</label><input id="edit-vc-code" type="text" readonly style="opacity:.5"/></div>
+    <div class="form-group mt-4"><label>Linked Email</label><input id="edit-vc-email" type="email" placeholder="volunteer@email.com"/></div>
+    <div class="form-group mt-4"><label>Expires At (optional)</label><input id="edit-vc-expires" type="datetime-local"/></div>
+    <div id="edit-vc-alert" class="alert mt-4"></div>
+    <div style="display:flex;gap:12px;margin-top:24px">
+      <button class="btn btn-full" onclick="saveVolCodeEdit()">Save Changes</button>
+      <button class="btn btn-outline btn-full" onclick="closeModal('edit-vol-code-modal')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script>
+// ── State ──────────────────────────────────────────────────────────────────
+let regPage = 1, regFilter = {}, regSearch = '';
+let auditPage = 1;
+let csvFile = null, csvRecords = [];
+let settings = {};
+let lastCreatedUrl = '', lastCreatedVolCode = '';
+let debounceTimer = null;
+
+// ── Login ──────────────────────────────────────────────────────────────────
+async function doLogin() {
+  const username = document.getElementById('login-user').value;
+  const password = document.getElementById('login-pass').value;
+  const r = await fetch('/api/admin/login', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({username,password}) });
+  const d = await r.json();
+  if (d.ok) {
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app').style.display = 'flex';
+    loadStats(); loadSettingsPanel(); loadRegs(); loadAuditLog();
+    gsap.from('#app', { opacity:0, duration:0.5 });
+  } else {
+    const el = document.getElementById('login-alert');
+    el.textContent = d.error; el.className = 'alert alert-error show';
+  }
+}
+
+// Check if already logged in
+fetch('/api/admin/me').then(r=>r.json()).then(d=>{
+  if (d.admin) {
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app').style.display = 'flex';
+    loadStats(); loadSettingsPanel(); loadRegs(); loadAuditLog();
+  }
+});
+
+async function adminLogout() {
+  await fetch('/api/admin/logout', { method:'POST' });
+  location.reload();
+}
+
+// ── Navigation ──────────────────────────────────────────────────────────────
+function showPanel(name) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-link').forEach(n => n.classList.remove('active'));
+  document.getElementById(`panel-${name}`).classList.add('active');
+  document.getElementById(`nav-${name}`).classList.add('active');
+
+  if (name === 'overview')         { loadStats(); loadQuickToggles(); }
+  if (name === 'registrations')    { loadRegs(); }
+  if (name === 'draw')             { loadDrawPool(); }
+  if (name === 'guest-codes')      { loadGuestCodes(); }
+  if (name === 'volunteer-codes')  { loadVolCodes(); }
+  if (name === 'audit')            { loadAuditLog(); }
+  if (name === 'settings')         { loadSettingsPanel(); }
+}
+
+// ── Stats ──────────────────────────────────────────────────────────────────
+async function loadStats() {
+  const d = await apiFetch('/api/admin/stats');
+  if (!d) return;
+  const freeCap = d.free?.cap||400, paidCap = d.paid?.cap||600;
+  const freeTotal = (d.free?.confirmed||0)+(d.free?.checkedIn||0);
+  const paidTotal = (d.paid?.confirmed||0)+(d.paid?.checkedIn||0);
+  document.getElementById('stats-grid').innerHTML = `
+    <div class="stat-card"><div class="stat-val">${freeTotal}</div><div class="stat-label">Free Confirmed</div><div class="stat-sub">${d.free?.checkedIn||0} checked in · ${d.free?.pendingDraw||0} in draw</div><div class="stat-bar"><div class="stat-bar-fill" style="width:${(freeTotal/freeCap*100).toFixed(0)}%"></div></div></div>
+    <div class="stat-card"><div class="stat-val">${paidTotal}</div><div class="stat-label">Paid Confirmed</div><div class="stat-sub">${d.paid?.checkedIn||0} checked in · cap: ${paidCap}</div><div class="stat-bar"><div class="stat-bar-fill" style="width:${(paidTotal/paidCap*100).toFixed(0)}%"></div></div></div>
+    <div class="stat-card"><div class="stat-val">${d.guest?.confirmed||0}</div><div class="stat-label">Special Guests</div><div class="stat-sub">${d.guest?.checkedIn||0} checked in</div></div>
+    <div class="stat-card"><div class="stat-val">${d.total?.checkedIn||0}</div><div class="stat-label">Total Checked In</div><div class="stat-sub">${d.total?.confirmed||0} total confirmed</div></div>
+  `;
+}
+
+// ── Quick Toggles ──────────────────────────────────────────────────────────
+async function loadQuickToggles() {
+  const s = await apiFetch('/api/admin/settings');
+  if (!s) return;
+  settings = s;
+  const rows = [
+    { key:'free_enabled',      label:'Free Registration',    desc:'Open FCFS and draw entries for free tier' },
+    { key:'paid_enabled',      label:'Paid Tickets',         desc:'Allow paid ticket purchases' },
+    { key:'vip_enabled',       label:'Special Guest Codes',  desc:'Enable VIP/guest URL codes' },
+    { key:'volunteer_enabled', label:'Volunteer Codes',      desc:'Allow volunteer code registrations' },
+    { key:'draw_enabled',      label:'Lucky Draw UI',        desc:'Show draw entry option to users' },
+    { key:'draw_accepting',    label:'Draw Entries Open',    desc:'Accept new entries into draw pool' },
+  ];
+  document.getElementById('quick-toggles').innerHTML = rows.map(r=>`
+    <div class="toggle-row">
+      <div class="toggle-info"><div class="toggle-title">${r.label}</div><div class="toggle-desc">${r.desc}</div></div>
+      <label class="toggle"><input type="checkbox" onchange="quickToggle('${r.key}',this.checked)" ${s[r.key]==='1'?'checked':''}><span class="toggle-slider"></span></label>
+    </div>
+  `).join('');
+}
+
+async function quickToggle(key, val) {
+  await apiFetch('/api/admin/settings', 'PATCH', { [key]: val ? '1' : '0' });
+}
+
+// ── Registrations ──────────────────────────────────────────────────────────
+async function loadRegs() {
+  const search = document.getElementById('reg-search')?.value || '';
+  const params = new URLSearchParams({ page: regPage, limit: 50, q: search });
+  if (regFilter.status) params.set('status', regFilter.status);
+  if (regFilter.type)   params.set('type', regFilter.type);
+
+  const d = await apiFetch('/api/admin/registrations?' + params);
+  if (!d) return;
+
+  document.getElementById('reg-total-label').textContent = `${d.total} records`;
+  document.getElementById('page-label').textContent = regPage;
+
+  const tbody = document.getElementById('reg-table-body');
+  tbody.innerHTML = d.registrations.map(r=>`
+    <tr>
+      <td style="font-family:var(--font-h);letter-spacing:.05em">${r.serial||'—'}</td>
+      <td>${esc(r.name)}</td>
+      <td style="font-size:.8rem">${esc(r.email)}</td>
+      <td>${typeLabel(r.ticket_type)}</td>
+      <td><span class="badge badge-${r.status}">${r.status}</span></td>
+      <td style="font-size:.75rem;color:var(--accent-dim)">${fmtDate(r.created_at)}</td>
+      <td>
+        <div class="action-btns">
+          ${['pending','pending_draw','expired','draw_lost'].includes(r.status)?`<button class="btn btn-sm" onclick="adminAction('approve','${r.id}')">Approve</button>`:''}
+          ${!['revoked','expired'].includes(r.status)?`<button class="btn btn-sm btn-danger" onclick="adminAction('revoke','${r.id}')">Revoke</button>`:''}
+          ${['confirmed','checked_in'].includes(r.status)?`<button class="btn btn-sm btn-outline" onclick="adminAction('reissue','${r.id}')">Reissue QR</button>`:''}
+        </div>
+      </td>
+    </tr>
+  `).join('') || '<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--accent-dim)">No results</td></tr>';
+}
+
+function debounceSearch() {
+  clearTimeout(debounceTimer);
+  debounceTimer = setTimeout(() => { regPage=1; loadRegs(); }, 300);
+}
+
+function setFilter(field, val, el) {
+  document.querySelectorAll('.filter-chip').forEach(c=>c.classList.remove('active'));
+  el.classList.add('active');
+  delete regFilter.status; delete regFilter.type;
+  if (val && field) regFilter[field] = val;
+  regPage = 1; loadRegs();
+}
+
+function changePage(d) { regPage = Math.max(1, regPage+d); loadRegs(); }
+
+async function adminAction(action, id) {
+  const r = await apiFetch(`/api/admin/${action}/${id}`, 'POST', {});
+  if (r) loadRegs();
+}
+
+function exportCSV() { window.location.href = '/api/admin/export'; }
+
+// ── Draw ───────────────────────────────────────────────────────────────────
+async function loadDrawPool() {
+  const d = await apiFetch('/api/admin/registrations?status=pending_draw&limit=1');
+  document.getElementById('draw-pool-count').textContent = d?.total || '—';
+}
+
+async function runDrawNow() {
+  const count = document.getElementById('draw-count').value;
+  const body = count ? { count: parseInt(count) } : {};
+  const d = await apiFetch('/api/admin/run-draw', 'POST', body);
+  const el = document.getElementById('draw-alert');
+  if (!d) return;
+  if (d.skipped) { el.textContent = d.reason; el.className='alert alert-info show'; return; }
+  el.textContent = `✓ Draw complete — ${d.winners?.length||0} winners selected, ${d.losers||0} notified.`; el.className='alert alert-success show';
+  const wr = document.getElementById('draw-results');
+  const wl = document.getElementById('draw-winners-list');
+  wr.style.display = 'block';
+  wl.innerHTML = (d.winners||[]).map(w=>`<div style="padding:8px 0;border-bottom:1px solid var(--accent-border);font-size:.85rem"><span style="font-family:var(--font-h)">${w.serial||''}</span> — ${esc(w.name)} (${esc(w.email)})</div>`).join('');
+  loadDrawPool();
+}
+
+// ── Guest Codes ────────────────────────────────────────────────────────────
+async function loadGuestCodes() {
+  const d = await apiFetch('/api/admin/guest-codes');
+  document.getElementById('guest-codes-body').innerHTML = (d?.codes||[]).map(c=>{
+    const shortUrl = `${location.origin}/guest?code=${c.code_url_safe}`;
+    return `
+    <tr>
+      <td><strong>${esc(c.label)}</strong></td>
+      <td style="font-size:.8rem">${esc(c.created_by_admin)}</td>
+      <td>${c.used_count}/${c.max_registrations}</td>
+      <td>${c.plus_one_allowed?'✓':'-'}</td>
+      <td>${c.revoked?'<span class="badge badge-revoked">Revoked</span>':'<span class="badge badge-confirmed">Active</span>'}</td>
+      <td style="max-width:160px;font-size:.75rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
+        ${c.revoked?'—':`<a href="${shortUrl}" target="_blank" style="color:var(--accent-dim)">/guest?code=${c.code_url_safe}</a>`}
+      </td>
+      <td>
+        <div class="action-btns">
+          ${!c.revoked?`
+            <button class="btn btn-sm btn-outline" onclick="openEditGuestCode(${JSON.stringify(JSON.stringify(c))})">Edit</button>
+            <button class="btn btn-sm btn-outline" onclick="copyGuestUrl('${c.code_url_safe}')">Copy URL</button>
+            <button class="btn btn-sm btn-outline" onclick="openGenQR('${c.id}')">Gen QR</button>
+            <button class="btn btn-sm btn-danger" onclick="revokeGuestCode('${c.id}','${esc(c.label)}')">Revoke</button>
+          `:'—'}
+        </div>
+      </td>
+    </tr>`;
+  }).join('') || '<tr><td colspan="7" style="padding:24px;text-align:center;color:var(--accent-dim)">No codes yet</td></tr>';
+}
+
+async function createGuestCode() {
+  const label = document.getElementById('gc-label').value;
+  const max = document.getElementById('gc-max').value;
+  const expires = document.getElementById('gc-expires').value;
+  const plusOne = document.getElementById('gc-plus-one').checked;
+  const auto = document.getElementById('gc-auto-approve').checked;
+  const d = await apiFetch('/api/admin/guest-codes', 'POST', { label, maxRegistrations: max, plusOneAllowed: plusOne, autoApprove: auto, expiresAt: expires ? new Date(expires).getTime() : null });
+  if (d?.ok) {
+    lastCreatedUrl = `${location.origin}/guest?code=${d.url.split('?code=')[1]}`;
+    document.getElementById('new-code-url').style.display = 'block';
+    document.getElementById('new-code-url-text').textContent = lastCreatedUrl;
+    loadGuestCodes();
+  }
+}
+
+async function revokeGuestCode(id, label) {
+  if (!confirm(`Revoke "${label}"? ALL QR codes under this guest list will stop working immediately.`)) return;
+  const d = await apiFetch(`/api/admin/guest-codes/${id}`, 'DELETE', {});
+  if (d?.ok) {
+    showAlert('gc-alert', '✓ Code revoked — all associated QRs are now invalid', 'success');
+    loadGuestCodes();
+  }
+}
+
+function copyGuestUrl(urlSafe) {
+  const url = `${location.origin}/guest?code=${urlSafe}`;
+  navigator.clipboard.writeText(url);
+  showAlert('gc-alert', `✓ Copied: ${url}`, 'success');
+}
+
+function openEditGuestCode(jsonStr) {
+  const c = JSON.parse(jsonStr);
+  document.getElementById('edit-gc-id').value = c.id;
+  document.getElementById('edit-gc-label').value = c.label;
+  document.getElementById('edit-gc-max').value = c.max_registrations;
+  document.getElementById('edit-gc-plus-one').checked = !!c.plus_one_allowed;
+  document.getElementById('edit-gc-auto-approve').checked = !!c.auto_approve;
+  document.getElementById('edit-gc-expires').value = c.expires_at ? new Date(c.expires_at).toISOString().slice(0,16) : '';
+  openModal('edit-guest-code-modal');
+}
+
+async function saveGuestCodeEdit() {
+  const id = document.getElementById('edit-gc-id').value;
+  const label = document.getElementById('edit-gc-label').value;
+  const maxRegistrations = document.getElementById('edit-gc-max').value;
+  const plusOneAllowed = document.getElementById('edit-gc-plus-one').checked;
+  const autoApprove = document.getElementById('edit-gc-auto-approve').checked;
+  const expiresAt = document.getElementById('edit-gc-expires').value;
+  const d = await apiFetch(`/api/admin/guest-codes/${id}`, 'PATCH', { label, maxRegistrations, plusOneAllowed, autoApprove, expiresAt: expiresAt || null });
+  if (d?.ok) {
+    showAlert('gc-alert', '✓ Guest code updated', 'success');
+    closeModal('edit-guest-code-modal');
+    loadGuestCodes();
+  } else {
+    showAlert('edit-gc-alert', d?.error || 'Failed', 'error');
+  }
+}
+
+function copyUrl() { navigator.clipboard.writeText(lastCreatedUrl); }
+
+function openGenQR(codeId) {
+  document.getElementById('gen-qr-code-id').value = codeId;
+  openModal('generate-qr-modal');
+}
+
+async function genQR() {
+  const codeId = document.getElementById('gen-qr-code-id').value;
+  const name = document.getElementById('gen-name').value;
+  const email = document.getElementById('gen-email').value;
+  const phone = document.getElementById('gen-phone').value;
+  const plusOne = document.getElementById('gen-plusone').checked;
+  const d = await apiFetch(`/api/admin/guest-codes/${codeId}/generate-qr`, 'POST', {name,email,phone,plusOne});
+  if (d?.ok) {
+    showAlert('gen-qr-alert', `✓ Generated ${d.serial} — QR emailed to ${email}`, 'success');
+  } else {
+    showAlert('gen-qr-alert', d?.error || 'Failed', 'error');
+  }
+}
+
+
+// ── Volunteer Codes ────────────────────────────────────────────────────────
+async function loadVolCodes() {
+  const d = await apiFetch('/api/admin/volunteer-codes');
+  document.getElementById('vol-codes-body').innerHTML = (d?.codes||[]).map(c=>{
+    return `
+    <tr>
+      <td style="font-family:var(--font-h);letter-spacing:.05em">${c.code}</td>
+      <td>${esc(c.linked_email)}</td>
+      <td style="font-size:.8rem">${esc(c.created_by)}</td>
+      <td>${c.used?'<span class="badge badge-checked_in">Used</span>':'—'}</td>
+      <td>${c.revoked?'<span class="badge badge-revoked">Revoked</span>':'<span class="badge badge-confirmed">Active</span>'}</td>
+      <td>
+        <div class="action-btns">
+          ${!c.revoked?`
+            <button class="btn btn-sm btn-outline" onclick="openEditVolCode(${JSON.stringify(JSON.stringify(c))})">Edit</button>
+            <button class="btn btn-sm btn-danger" onclick="revokeVolCode('${c.id}')">Revoke</button>
+          `:'—'}
+        </div>
+      </td>
+    </tr>`;
+  }).join('') || '<tr><td colspan="6" style="padding:24px;text-align:center;color:var(--accent-dim)">No codes</td></tr>';
+}
+
+async function createVolCode() {
+  const email = document.getElementById('vc-email').value;
+  const expires = document.getElementById('vc-expires').value;
+  const d = await apiFetch('/api/admin/volunteer-codes', 'POST', { linkedEmail: email, expiresAt: expires ? new Date(expires).getTime() : null });
+  if (d?.ok) {
+    lastCreatedVolCode = d.code;
+    document.getElementById('new-vol-code').style.display = 'block';
+    document.getElementById('new-vol-code-text').textContent = d.code;
+    loadVolCodes();
+  }
+}
+
+async function revokeVolCode(id) {
+  await apiFetch(`/api/admin/volunteer-codes/${id}`, 'DELETE', {});
+  loadVolCodes();
+}
+
+function openEditVolCode(jsonStr) {
+  const c = JSON.parse(jsonStr);
+  document.getElementById('edit-vc-id').value = c.id;
+  document.getElementById('edit-vc-code').value = c.code;
+  document.getElementById('edit-vc-email').value = c.linked_email;
+  document.getElementById('edit-vc-expires').value = c.expires_at ? new Date(c.expires_at).toISOString().slice(0,16) : '';
+  openModal('edit-vol-code-modal');
+}
+
+async function saveVolCodeEdit() {
+  const id = document.getElementById('edit-vc-id').value;
+  const linkedEmail = document.getElementById('edit-vc-email').value;
+  const expiresAt = document.getElementById('edit-vc-expires').value;
+  const d = await apiFetch(`/api/admin/volunteer-codes/${id}`, 'PATCH', { linkedEmail, expiresAt: expiresAt || null });
+  if (d?.ok) {
+    showAlert('vc-alert', '✓ Volunteer code updated', 'success');
+    closeModal('edit-vol-code-modal');
+    loadVolCodes();
+  } else {
+    showAlert('edit-vc-alert', d?.error || 'Failed', 'error');
+  }
+}
+
+function copyVolCode() { navigator.clipboard.writeText(lastCreatedVolCode); }
+
+// ── Bulk Upload ────────────────────────────────────────────────────────────
+function handleDrop(e) { e.preventDefault(); document.getElementById('drop-zone').style.borderColor='var(--accent-border)'; handleFile(e.dataTransfer.files[0]); }
+function handleFile(file) {
+  if (!file) return;
+  csvFile = file;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const lines = e.target.result.split('\n').filter(l=>l.trim());
+    const headers = lines[0].split(',').map(h=>h.trim());
+    csvRecords = lines.slice(1).map(l=>{
+      const vals = l.split(',').map(v=>v.trim().replace(/^"|"$/g,''));
+      const obj = {}; headers.forEach((h,i)=>obj[h]=vals[i]||''); return obj;
+    }).filter(r=>r.email||r.name);
+
+    document.getElementById('bulk-preview-title').textContent = `Preview — ${csvRecords.length} rows`;
+    document.getElementById('bulk-preview-body').innerHTML = csvRecords.slice(0,10).map(r=>`<tr><td>${esc(r.name)}</td><td>${esc(r.email)}</td><td>${esc(r.phone||'')}</td></tr>`).join('');
+    document.getElementById('bulk-preview').style.display = 'block';
+  };
+  reader.readAsText(file);
+}
+
+async function uploadCSV() {
+  if (!csvFile) return;
+  const formData = new FormData();
+  formData.append('csv', csvFile);
+  formData.append('ticketType', document.getElementById('bulk-type').value);
+  const r = await fetch('/api/admin/bulk-upload', { method:'POST', body:formData });
+  const d = await r.json();
+  if (!r.ok) { showAlert('bulk-alert', d.error, 'error'); return; }
+  const success = d.results.filter(x=>x.status==='created').length;
+  const errors = d.results.filter(x=>x.error).length;
+  showAlert('bulk-alert', `✓ Uploaded: ${success} created, ${errors} errors.`, 'success');
+  document.getElementById('bulk-results').style.display = 'block';
+  document.getElementById('bulk-results').innerHTML = `<div class="table-wrap"><table>
+    <thead><tr><th>Email</th><th>Serial</th><th>Result</th></tr></thead>
+    <tbody>${d.results.map(r=>`<tr><td>${esc(r.email)}</td><td>${r.serial||'—'}</td><td style="color:${r.error?'var(--error)':'var(--success)'}">${r.error||'Created'}</td></tr>`).join('')}</tbody>
+  </table></div>`;
+}
+
+// ── Audit Log ──────────────────────────────────────────────────────────────
+async function loadAuditLog() {
+  const d = await apiFetch(`/api/admin/audit-logs?page=${auditPage}&limit=50`);
+  if (!d) return;
+  document.getElementById('audit-total-label').textContent = `${d.total} entries`;
+  document.getElementById('audit-page-label').textContent = auditPage;
+  document.getElementById('audit-body').innerHTML = (d.logs||[]).map(l=>`
+    <tr>
+      <td style="font-size:.75rem;color:var(--accent-dim)">${fmtDate(l.created_at)}</td>
+      <td style="font-size:.8rem">${esc(l.admin_id)}</td>
+      <td style="font-weight:600;font-size:.8rem">${l.action}</td>
+      <td style="font-size:.75rem;color:var(--accent-dim)">${esc(l.target_id||'—')}</td>
+      <td style="font-size:.75rem;color:var(--accent-dim);max-width:200px;overflow:hidden;text-overflow:ellipsis">${esc(l.details||'')}</td>
+    </tr>
+  `).join('');
+}
+function changeAuditPage(d) { auditPage = Math.max(1, auditPage+d); loadAuditLog(); }
+
+// ── Settings Panel ──────────────────────────────────────────────────────────
+async function loadSettingsPanel() {
+  const s = await apiFetch('/api/admin/settings');
+  if (!s) return;
+  settings = s;
+
+  const groups = [
+    { title: '⚡ Auth Methods', items: [
+      { key:'auth_email_enabled',    label:'Email / Password Login',   type:'toggle' },
+      { key:'auth_google_enabled',   label:'Google SSO Login',         type:'toggle' },
+      { key:'auth_phone_enabled',    label:'Phone OTP Login',          type:'toggle' },
+    ]},
+    { title: '🎟  Ticket Tiers', items: [
+      { key:'free_enabled',          label:'Free Registration Open',   type:'toggle' },
+      { key:'paid_enabled',          label:'Paid Tickets Open',        type:'toggle' },
+      { key:'vip_enabled',           label:'Special Guest Codes Active',type:'toggle'},
+      { key:'volunteer_enabled',     label:'Volunteer Codes Active',   type:'toggle' },
+      { key:'draw_enabled',          label:'Lucky Draw UI Shown',      type:'toggle' },
+      { key:'draw_accepting',        label:'Draw Entries Accepted',    type:'toggle' },
+    ]},
+    { title: '📊 Quotas & Prices', items: [
+      { key:'fcfs_limit',            label:'FCFS Guaranteed Slots', type:'number' },
+      { key:'total_free_cap',        label:'Total Free Capacity',      type:'number' },
+      { key:'total_paid_cap',        label:'Total Paid Capacity',      type:'number' },
+      { key:'paid_price',            label:'Paid Entry Price (INR)',   type:'number' },
+      { key:'vip_price',             label:'VIP Access Price (INR)',   type:'number' },
+      { key:'max_paid_per_person',   label:'Max Tickets per Purchase', type:'number' },
+      { key:'checkout_timeout_mins', label:'Checkout Timeout (minutes)',type:'number'},
+    ]},
+    { title: '📍 Event Info', items: [
+      { key:'event_name',            label:'Event Name',               type:'text' },
+      { key:'event_start_datetime',  label:'Event Start Date & Time',  type:'datetime-local', epochKey:'event_start_epoch' },
+      { key:'late_cutoff_mins',      label:'Late Entry Cutoff (minutes)',type:'number'},
+    ]},
+    { title: '🎰 Lucky Draw Schedule', items: [
+      { key:'draw_auto_run',         label:'Auto-Run Draw at Scheduled Time', type:'toggle' },
+      { key:'draw_run_offset_mins',  label:'Run Draw X Minutes Before Event', type:'number'},
+      { key:'draw_has_run',          label:'Draw Already Ran (toggle off to re-run)', type:'toggle'},
+    ]},
+    { title: '👥 +1 Rules', items: [
+      { key:'plus_one_vip_enabled',        label:'VIP/Guest Can Have +1',   type:'toggle' },
+      { key:'plus_one_volunteer_enabled',  label:'Volunteers Can Have +1',  type:'toggle' },
+    ]},
+  ];
+
+  // Compute scheduled draw time for display
+  const epochMs = parseInt(s.event_start_epoch||'0',10);
+  const offsetMins = parseInt(s.draw_run_offset_mins||'120',10);
+  let drawScheduleInfo = '';
+  if (epochMs > 0) {
+    const drawAt = new Date(epochMs - offsetMins * 60000);
+    drawScheduleInfo = `<div style="font-size:.75rem;color:var(--warn);padding:8px 0">⏰ Draw will auto-run at: <strong>${drawAt.toLocaleString('en-IN')}</strong> (${offsetMins} min before event)</div>`;
+  }
+
+  document.getElementById('settings-form').innerHTML = groups.map(g=>`
+    <div style="margin-bottom:32px">
+      <h4 style="margin-bottom:16px">${g.title}</h4>
+      ${g.title.includes('Draw Schedule') ? drawScheduleInfo : ''}
+      ${g.items.map(item=>{
+        // For datetime-local, convert epoch ms to datetime string
+        let val = s[item.epochKey || item.key] || '';
+        if (item.type === 'datetime-local' && val && val !== '0') {
+          val = new Date(parseInt(val,10)).toISOString().slice(0,16);
+        }
+        return `
+        <div class="toggle-row" style="padding:12px 0">
+          <span style="font-size:.875rem">${item.label}</span>
+          ${item.type === 'toggle'
+            ? `<label class="toggle"><input type="checkbox" id="setting-${item.key}" ${(s[item.epochKey||item.key]||'0')==='1'?'checked':''}><span class="toggle-slider"></span></label>`
+            : `<input type="${item.type}" id="setting-${item.key}" value="${val}" style="max-width:220px;text-align:right"/>`
+          }
+        </div>`;
+      }).join('')}
+    </div>
+  `).join('');
+}
+
+async function saveSettings() {
+  const updated = {};
+  document.querySelectorAll('[id^="setting-"]').forEach(el => {
+    const key = el.id.replace('setting-','');
+    if (el.type === 'checkbox') {
+      updated[key] = el.checked ? '1' : '0';
+    } else if (el.type === 'datetime-local') {
+      // Send as event_start_datetime — server converts to epoch
+      updated.event_start_datetime = el.value;
+    } else {
+      updated[key] = el.value;
+    }
+  });
+  const d = await apiFetch('/api/admin/settings', 'PATCH', updated);
+  if (d?.ok) {
+    showAlert('settings-alert', '✓ Settings saved', 'success');
+    loadSettingsPanel(); // Refresh to show updated draw schedule info
+  } else {
+    showAlert('settings-alert', d?.error || 'Error saving settings', 'error');
+  }
+}
+
+// ── Helpers ────────────────────────────────────────────────────────────────
+async function apiFetch(url, method='GET', body=null) {
+  try {
+    const opts = { method, headers:{'Content-Type':'application/json'} };
+    if (body && method !== 'GET') opts.body = JSON.stringify(body);
+    const r = await fetch(url, opts);
+    return await r.json();
+  } catch(e) { console.error(e); return null; }
+}
+
+function showAlert(id, msg, type) {
+  const el = document.getElementById(id);
+  if (!el) return; el.textContent = msg; el.className = `alert alert-${type} show`;
+  setTimeout(() => el.classList.remove('show'), 5000);
+}
+
+function openModal(id) { document.getElementById(id).classList.add('show'); }
+function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+
+// Close modal on overlay click
+document.querySelectorAll('.modal-overlay').forEach(m => m.addEventListener('click', e => { if(e.target === m) m.classList.remove('show'); }));
+
+function esc(str) { return String(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function fmtDate(ms) { if(!ms) return '—'; return new Date(ms).toLocaleString('en-IN',{dateStyle:'short',timeStyle:'short'}); }
+function typeLabel(t) { return {free:'Free',paid:'Paid',guest:'VIP',volunteer:'Vol'}[t]||t; }
+</script>
+</body>
+</html>

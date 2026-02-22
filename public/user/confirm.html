@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Your Ticket — LocalHost Festival</title>
+<link rel="stylesheet" href="/shared/styles.css"/>
+<style>
+body { display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:100vh; padding:40px 20px; text-align:center; }
+.ticket-wrap { width:100%; max-width:400px; }
+.ticket-body {
+  border:1px solid var(--accent-border); padding:40px 32px; position:relative;
+  background:linear-gradient(135deg, rgba(50,34,30,0.15) 0%, transparent 100%);
+}
+.ticket-body::before, .ticket-body::after {
+  content:''; position:absolute; width:40px; height:40px; border-radius:50%;
+  background:var(--bg); border:1px solid var(--accent-border);
+}
+.ticket-body::before { top:50%; left:-21px; transform:translateY(-50%); }
+.ticket-body::after  { top:50%; right:-21px; transform:translateY(-50%); }
+.ticket-perforation {
+  border-top:1px dashed var(--accent-border); margin:24px -32px; position:relative;
+}
+.qr-wrap { background:white; padding:16px; display:inline-block; margin:24px auto; }
+.serial-badge {
+  font-family:var(--font-h); font-size:1.1rem; letter-spacing:.2em;
+  padding:8px 16px; border:1px solid var(--accent-border); display:inline-block; margin-bottom:8px;
+}
+.type-tag {
+  font-size:.65rem; font-weight:700; letter-spacing:.15em; text-transform:uppercase;
+  padding:4px 12px; background:var(--accent); color:var(--bg); display:inline-block; margin-bottom:24px;
+}
+</style>
+</head>
+<body>
+<div class="ticket-wrap" id="ticket-wrap">
+  <div style="font-size:.7rem;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:var(--accent-dim);display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:32px">
+    <span style="display:block;width:24px;height:1px;background:var(--accent-dim)"></span>
+    Your Ticket
+    <span style="display:block;width:24px;height:1px;background:var(--accent-dim)"></span>
+  </div>
+
+  <div class="ticket-body" id="ticket-body">
+    <div class="type-tag" id="type-tag">Loading...</div>
+    <h1 style="font-size:1.8rem;margin-bottom:4px" id="event-name-display">LocalHost Festival</h1>
+    <p id="attendee-name" style="color:var(--accent-dim);margin-bottom:0"></p>
+
+    <div class="ticket-perforation"></div>
+
+    <div class="serial-badge" id="serial-display">——</div>
+    <div class="qr-wrap">
+      <canvas id="qr-canvas" width="200" height="200"></canvas>
+    </div>
+
+    <div id="plus-one-notice" style="display:none;font-size:.8rem;color:var(--warn);margin-top:8px">
+      ⚠ +1 Allowed — Companion must arrive with you
+    </div>
+
+    <div class="ticket-perforation"></div>
+
+    <div style="font-size:.75rem;color:var(--accent-dim);margin-top:8px">
+      Single-use QR • Show at gate • Do not share
+    </div>
+  </div>
+
+  <button class="btn mt-4" onclick="downloadTicket()">Download Ticket</button>
+  <a href="/user" class="btn btn-outline mt-2" style="display:inline-flex">Register Another</a>
+
+  <p style="margin-top:24px;font-size:.75rem;color:var(--accent-dim)">A copy has been sent to your email.</p>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script>
+const params = new URLSearchParams(window.location.search);
+const orderId = params.get('order');
+
+async function loadTicket() {
+  // For paid orders, fetch the first registration in that order
+  // For simple flow, we store regId in session / local storage after registration
+  const storedReg = sessionStorage.getItem('lastRegistrationId') || localStorage.getItem('lastRegistrationId');
+
+  // Try to look up by orderId
+  if (orderId) {
+    try {
+      const r = await fetch(`/api/tickets/by-order/${orderId}`);
+      if (r.ok) {
+        const data = await r.json();
+        renderTickets(data.tickets || [data.ticket]);
+        return;
+      }
+    } catch{}
+  }
+
+  if (storedReg) {
+    try {
+      const r = await fetch(`/api/tickets/by-reg/${storedReg}`);
+      if (r.ok) {
+        const d = await r.json();
+        renderTickets([d]);
+      }
+    } catch{}
+  }
+
+  // Fallback - show generic success
+  renderGeneric();
+}
+
+function renderTickets(tickets) {
+  if (!tickets || tickets.length === 0) { renderGeneric(); return; }
+  const t = tickets[0];
+  const r = t.registration;
+  const tk = t.ticket;
+
+  document.getElementById('serial-display').textContent = r?.serial || 'TICKET';
+  document.getElementById('attendee-name').textContent = r?.name || '';
+  document.getElementById('type-tag').textContent = {free:'Free Entry',paid:'Paid Entry',vip:'VIP Access',guest:'Special Guest',volunteer:'Volunteer'}[r?.ticket_type]||r?.ticket_type||'Entry';
+  if (r?.plus_one) document.getElementById('plus-one-notice').style.display = 'block';
+
+  if (tk?.qr_hash) {
+    QRCode.toCanvas(document.getElementById('qr-canvas'), tk.qr_hash, { width:200, margin:2, color:{dark:'#000000',light:'#ffffff'} });
+  }
+}
+
+function renderGeneric() {
+  document.getElementById('type-tag').textContent = 'Entry Confirmed';
+  document.getElementById('serial-display').textContent = 'CHECK EMAIL';
+  document.getElementById('attendee-name').textContent = 'Your QR ticket has been sent to your email address.';
+  QRCode.toCanvas(document.getElementById('qr-canvas'), 'DEMO_PLACEHOLDER', { width:200, margin:2, color:{dark:'#cccccc',light:'#ffffff'} });
+}
+
+function downloadTicket() {
+  const canvas = document.getElementById('qr-canvas');
+  const link = document.createElement('a');
+  link.download = 'localhost-ticket.png';
+  link.href = canvas.toDataURL();
+  link.click();
+}
+
+const tl = gsap.timeline({ defaults: { ease:'power3.out' } });
+tl.from('#ticket-body', { opacity:0, y:60, rotateX:10, duration:0.8, transformOrigin:'50% 0%' })
+  .from('.type-tag, #event-name-display, #attendee-name', { opacity:0, y:15, stagger:0.08, duration:0.5 }, '-=0.4')
+  .from('.serial-badge', { opacity:0, scale:0.9, duration:0.4 }, '-=0.3')
+  .from('.qr-wrap', { opacity:0, scale:0.85, duration:0.5 }, '-=0.3');
+
+loadTicket();
+</script>
+</body>
+</html>

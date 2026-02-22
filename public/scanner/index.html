@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Gate Scanner — LocalHost Festival</title>
+<link rel="stylesheet" href="/shared/styles.css"/>
+<style>
+* { user-select: none; }
+body { background:var(--bg); display:flex; flex-direction:column; height:100vh; overflow:hidden; }
+
+/* Header */
+header {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:16px 24px; border-bottom:1px solid var(--accent-border); flex-shrink:0;
+}
+.scanner-logo { font-family:var(--font-h); font-size:1rem; text-transform:uppercase; letter-spacing:-0.01em; }
+#network-indicator {
+  display:flex; align-items:center; gap:8px; font-size:.7rem;
+  text-transform:uppercase; letter-spacing:.1em; color:var(--accent-dim);
+}
+.net-dot { width:8px; height:8px; border-radius:50%; background:var(--warn); }
+.net-dot.online { background:var(--success); }
+.net-dot.offline { background:var(--error); }
+
+/* Camera / QR area */
+#camera-container {
+  position:relative; flex:1; display:flex; align-items:center; justify-content:center;
+  background:#000; overflow:hidden;
+}
+#reader { width:100%; height:100%; }
+
+/* Scan overlay frame */
+.scan-frame {
+  position:absolute; inset:0; pointer-events:none; z-index:10;
+  display:flex; align-items:center; justify-content:center;
+}
+.frame-box {
+  width:260px; height:260px; position:relative;
+}
+.frame-box::before, .frame-box::after,
+.frame-tl, .frame-tr, .frame-bl, .frame-br {
+  content:''; position:absolute; width:32px; height:32px; border-color:var(--accent); border-style:solid;
+}
+.frame-box::before { top:0; left:0; border-width:3px 0 0 3px; }
+.frame-box::after  { top:0; right:0; border-width:3px 3px 0 0; }
+.frame-bl { bottom:0; left:0; border-width:0 0 3px 3px; }
+.frame-br { bottom:0; right:0; border-width:0 3px 3px 0; }
+.scan-line {
+  position:absolute; left:0; right:0; height:2px;
+  background:linear-gradient(to right, transparent, var(--accent), transparent);
+  animation: scanline 2.5s ease-in-out infinite;
+}
+@keyframes scanline {
+  0%   { top:0; opacity:1; }
+  90%  { top:100%; opacity:1; }
+  100% { top:100%; opacity:0; }
+}
+
+/* Result overlay */
+#result-overlay {
+  position:fixed; inset:0; z-index:200;
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  text-align:center; padding:32px;
+  opacity:0; pointer-events:none; transition:opacity 0.2s;
+}
+#result-overlay.show { opacity:1; pointer-events:all; }
+#result-overlay.valid    { background:rgba(9,9,9,0.96); }
+#result-overlay.used     { background:rgba(9,9,9,0.96); }
+#result-overlay.invalid  { background:rgba(9,9,9,0.96); }
+
+.result-icon { font-size:5rem; margin-bottom:16px; }
+.result-status {
+  font-family:var(--font-h); font-size:3rem; letter-spacing:-0.04em;
+  line-height:1.1; margin-bottom:16px;
+}
+.result-status.valid   { color:var(--success); }
+.result-status.used    { color:var(--warn); }
+.result-status.invalid { color:var(--error); }
+
+.attendee-card {
+  border:1px solid var(--accent-border); padding:24px; max-width:400px; width:100%;
+  text-align:left; margin:16px 0;
+}
+.attendee-row { display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid rgba(245,245,220,0.06); font-size:.875rem; }
+.attendee-row:last-child { border-bottom:none; }
+.attendee-row .key { color:var(--accent-dim); font-size:.75rem; text-transform:uppercase; letter-spacing:.08em; }
+.attendee-row .val { font-weight:600; text-align:right; max-width:60%; }
+
+.type-chip {
+  display:inline-block; padding:4px 12px;
+  font-size:.65rem; font-weight:700; letter-spacing:.15em; text-transform:uppercase;
+  background:var(--accent); color:var(--bg);
+}
+
+.reason-text { color:var(--accent-dim); font-size:.875rem; margin-top:8px; }
+.countdown-bar { width:100%; height:4px; background:var(--accent-border); margin-top:24px; max-width:400px; }
+.countdown-fill { height:100%; background:var(--accent); transition:width 2s linear; }
+
+/* Bottom controls */
+#bottom-bar { padding:20px 24px; border-top:1px solid var(--accent-border); flex-shrink:0; }
+.scanner-status { font-size:.75rem; color:var(--accent-dim); text-transform:uppercase; letter-spacing:.1em; text-align:center; margin-bottom:12px; }
+.manual-input { display:flex; gap:8px; }
+.manual-input input { font-size:.875rem; }
+.manual-input button { white-space:nowrap; }
+
+/* Stats strip */
+#stats-strip {
+  display:flex; gap:24px; justify-content:center; font-size:.75rem;
+  color:var(--accent-dim); padding:8px 24px; border-top:1px solid rgba(245,245,220,0.05); flex-shrink:0;
+}
+#stats-strip span { text-transform:uppercase; letter-spacing:.08em; }
+#stats-strip strong { color:var(--accent); font-family:var(--font-h); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="scanner-logo">LocalHost <span style="color:var(--accent-dim);font-size:.75rem">Gate</span></div>
+  <div id="network-indicator"><div class="net-dot" id="net-dot"></div><span id="net-label">Checking…</span></div>
+</header>
+
+<div id="camera-container">
+  <div id="reader"></div>
+  <div class="scan-frame">
+    <div class="frame-box">
+      <div class="frame-bl"></div><div class="frame-br"></div>
+      <div class="scan-line"></div>
+    </div>
+  </div>
+</div>
+
+<div id="stats-strip">
+  <span>Today: <strong id="stat-checkin">—</strong> Checked In</span>
+  <span>Cache: <strong id="stat-cache">—</strong> QRs</span>
+</div>
+
+<div id="bottom-bar">
+  <div class="scanner-status" id="scanner-status">Point camera at ticket QR</div>
+  <div class="manual-input">
+    <input type="text" id="manual-qr" placeholder="Paste QR code manually…" onkeydown="if(event.key==='Enter')manualScan()"/>
+    <button class="btn btn-outline btn-sm" onclick="manualScan()">Scan</button>
+  </div>
+</div>
+
+<!-- Result Overlay -->
+<div id="result-overlay">
+  <div class="result-icon" id="result-icon"></div>
+  <div class="result-status" id="result-status"></div>
+  <div class="reason-text" id="result-reason"></div>
+  <div class="attendee-card" id="attendee-card" style="display:none"></div>
+  <div class="countdown-bar"><div class="countdown-fill" id="countdown-fill" style="width:100%"></div></div>
+</div>
+
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script>
+// ── Audio Context ──────────────────────────────────────────────────────────
+let audioCtx;
+function getAudioCtx() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  return audioCtx;
+}
+
+function beep(freq, duration, type='sine', gain=0.3) {
+  const ctx = getAudioCtx();
+  const osc = ctx.createOscillator();
+  const g = ctx.createGain();
+  osc.connect(g); g.connect(ctx.destination);
+  osc.type = type; osc.frequency.value = freq;
+  g.gain.setValueAtTime(gain, ctx.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+  osc.start(); osc.stop(ctx.currentTime + duration);
+}
+
+function playSuccess() { beep(880, 0.15); setTimeout(() => beep(1200, 0.2), 160); }
+function playDuplicate() { beep(440, 0.2); setTimeout(() => beep(440, 0.2), 250); }
+function playInvalid() { beep(180, 0.4, 'sawtooth', 0.4); }
+
+// ── Cache ──────────────────────────────────────────────────────────────────
+let offlineCache = new Map(); // qr_hash → attendee data
+let isOnline = navigator.onLine;
+let scanActive = true;
+let scanCooldown = false;
+let lastScan = '';
+let checkInCount = 0;
+
+async function loadCache() {
+  try {
+    const r = await fetch('/api/scan/cache');
+    if (r.ok) {
+      const d = await r.json();
+      offlineCache.clear();
+      for (const h of d.hashes) offlineCache.set(h.qr_hash, h);
+      document.getElementById('stat-cache').textContent = d.hashes.length;
+      localStorage.setItem('scanner_cache', JSON.stringify(d.hashes));
+      console.log(`[Cache] Loaded ${d.hashes.length} valid QRs`);
+    }
+  } catch(e) {
+    // Load from localStorage if network failed
+    const stored = localStorage.getItem('scanner_cache');
+    if (stored) {
+      const arr = JSON.parse(stored);
+      for (const h of arr) offlineCache.set(h.qr_hash, h);
+      document.getElementById('stat-cache').textContent = arr.length;
+      console.log('[Cache] Loaded from localStorage:', arr.length);
+    }
+  }
+}
+
+// ── Network Status ──────────────────────────────────────────────────────────
+function updateNetwork() {
+  isOnline = navigator.onLine;
+  document.getElementById('net-dot').className = 'net-dot ' + (isOnline ? 'online' : 'offline');
+  document.getElementById('net-label').textContent = isOnline ? 'Online' : 'Offline — Using Cache';
+}
+window.addEventListener('online',  () => { updateNetwork(); loadCache(); });
+window.addEventListener('offline', updateNetwork);
+updateNetwork();
+
+// ── Scanner ────────────────────────────────────────────────────────────────
+const html5QrCode = new Html5Qrcode('reader');
+
+const scanConfig = {
+  fps: 15,
+  qrbox: { width: 260, height: 260 },
+  aspectRatio: window.innerHeight / window.innerWidth,
+  disableFlip: false,
+};
+
+Html5Qrcode.getCameras().then(cams => {
+  if (cams.length === 0) {
+    document.getElementById('scanner-status').textContent = 'No camera found — use manual input';
+    return;
+  }
+  // Prefer back camera
+  const cam = cams.find(c => c.label.toLowerCase().includes('back')) || cams[cams.length - 1];
+  html5QrCode.start(cam.id, scanConfig, onQRDetected, () => {}).catch(e => {
+    document.getElementById('scanner-status').textContent = 'Camera error — use manual input below';
+    console.error(e);
+  });
+}).catch(e => {
+  document.getElementById('scanner-status').textContent = 'Camera permission denied — use manual input';
+});
+
+// ── Core Scan Logic ──────────────────────────────────────────────────────────
+async function onQRDetected(decodedText) {
+  if (scanCooldown || decodedText === lastScan) return;
+  lastScan = decodedText;
+  scanCooldown = true;
+  await processScan(decodedText);
+  setTimeout(() => { scanCooldown = false; lastScan = ''; }, 2500);
+}
+
+async function processScan(qrHash) {
+  document.getElementById('scanner-status').textContent = 'Processing…';
+
+  let result;
+  if (isOnline) {
+    try {
+      const r = await fetch('/api/scan', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ qrHash })
+      });
+      result = await r.json();
+    } catch(e) {
+      // Fallback to cache
+      result = offlineLookup(qrHash);
+    }
+  } else {
+    result = offlineLookup(qrHash);
+  }
+
+  showResult(result);
+}
+
+function offlineLookup(qrHash) {
+  const cached = offlineCache.get(qrHash);
+  if (!cached) return { result:'INVALID', reason:'Not found in offline cache' };
+  if (cached.used) return { result:'ALREADY_USED', reason:'Marked as used in cache', attendee: buildCachedCard(cached) };
+  // Mark locally as used
+  cached.used = 1; offlineCache.set(qrHash, cached);
+  return { result:'VALID_OFFLINE', attendee: buildCachedCard(cached) };
+}
+
+function buildCachedCard(h) {
+  return { name:h.name||'Unknown', serial:h.serial||'—', type: h.ticket_type||'unknown', plusOne:!!h.plus_one };
+}
+
+// ── Show Result Overlay ──────────────────────────────────────────────────────
+let resultTimer = null;
+const DISPLAY_TIME = 3000;
+
+function showResult(data) {
+  const overlay = document.getElementById('result-overlay');
+  const icon = document.getElementById('result-icon');
+  const status = document.getElementById('result-status');
+  const reason = document.getElementById('result-reason');
+  const card = document.getElementById('attendee-card');
+  const fill = document.getElementById('countdown-fill');
+
+  overlay.className = 'show';
+
+  if (data.result === 'VALID' || data.result === 'VALID_OFFLINE') {
+    overlay.classList.add('valid'); icon.textContent = '✓'; status.textContent = 'VALID'; status.className = 'result-status valid';
+    reason.textContent = data.result === 'VALID_OFFLINE' ? '⚠ Offline mode — verify manually' : `Checked in at ${new Date(data.checkedInAt).toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'})}`;
+    playSuccess(); checkInCount++; document.getElementById('stat-checkin').textContent = checkInCount;
+  } else if (data.result === 'ALREADY_USED') {
+    overlay.classList.add('used'); icon.textContent = '⚠'; status.textContent = 'ALREADY SCANNED'; status.className = 'result-status used';
+    reason.textContent = data.reason || 'This QR was already used';
+    playDuplicate();
+  } else {
+    overlay.classList.add('invalid'); icon.textContent = '✗'; status.textContent = 'INVALID'; status.className = 'result-status invalid';
+    reason.textContent = data.reason || 'Unknown QR code';
+    playInvalid();
+  }
+
+  // Attendee card
+  if (data.attendee) {
+    const a = data.attendee;
+    const typeMap = {free:'Free Entry',paid:'Paid Entry',vip:'VIP Access',guest:'Special Guest',volunteer:'Volunteer'};
+    card.style.display = 'block';
+    card.innerHTML = `
+      <div class="attendee-row"><span class="key">Name</span><span class="val">${esc(a.name)}</span></div>
+      <div class="attendee-row"><span class="key">Serial</span><span class="val" style="font-family:var(--font-h);letter-spacing:.05em">${esc(a.serial)}</span></div>
+      <div class="attendee-row"><span class="key">Type</span><span class="val"><span class="type-chip">${typeMap[a.typeRaw||a.type]||a.type}</span></span></div>
+      ${a.guestListLabel ? `<div class="attendee-row"><span class="key">Guest List</span><span class="val">${esc(a.guestListLabel)}</span></div>` : ''}
+      <div class="attendee-row"><span class="key">+1</span><span class="val" style="color:${a.plusOne?'var(--warn)':'var(--accent-dim)'}">${a.plusOne?'Yes — companion must arrive together':'No'}</span></div>
+      ${a.checkedInAt ? `<div class="attendee-row"><span class="key">Time</span><span class="val">${new Date(a.checkedInAt).toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'})}</span></div>` : ''}
+    `;
+  } else { card.style.display = 'none'; }
+
+  // GSAP entrance
+  gsap.fromTo(overlay, { opacity:0, scale:0.97 }, { opacity:1, scale:1, duration:0.3, ease:'power2.out' });
+
+  // Countdown bar
+  gsap.fromTo(fill, { width:'100%' }, { width:'0%', duration: DISPLAY_TIME/1000, ease:'none' });
+
+  // Auto-dismiss
+  if (resultTimer) clearTimeout(resultTimer);
+  resultTimer = setTimeout(dismissResult, DISPLAY_TIME);
+
+  document.getElementById('scanner-status').textContent = 'Point camera at ticket QR';
+}
+
+function dismissResult() {
+  const overlay = document.getElementById('result-overlay');
+  gsap.to(overlay, { opacity:0, scale:0.97, duration:0.25, ease:'power2.in', onComplete: () => {
+    overlay.className = '';
+    document.getElementById('attendee-card').style.display = 'none';
+  }});
+}
+
+// Tap result to dismiss early
+document.getElementById('result-overlay').addEventListener('click', () => {
+  if (resultTimer) clearTimeout(resultTimer);
+  dismissResult();
+});
+
+// ── Manual Scan ────────────────────────────────────────────────────────────
+function manualScan() {
+  const val = document.getElementById('manual-qr').value.trim();
+  if (!val) return;
+  document.getElementById('manual-qr').value = '';
+  processScan(val);
+}
+
+// ── Refresh stats ──────────────────────────────────────────────────────────
+async function refreshStats() {
+  try {
+    const d = await fetch('/api/admin/stats').then(r=>r.json());
+    if (d?.total) document.getElementById('stat-checkin').textContent = d.total.checkedIn;
+  } catch{}
+}
+
+function esc(str) { return String(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+// ── Init ──────────────────────────────────────────────────────────────────
+loadCache();
+refreshStats();
+setInterval(refreshStats, 30000);
+setInterval(loadCache, 120000); // Refresh cache every 2 min
+</script>
+</body>
+</html>

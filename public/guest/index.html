@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Special Guest — LocalHost Festival</title>
+<meta name="description" content="Special guest access for LocalHost Festival — the media × startup lab for young creatives."/>
+<link rel="stylesheet" href="/shared/styles.css"/>
+<style>
+/* ── Guest page visual theme ───────────────────────────────────────────── */
+body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 40px 20px;
+  background: #0a0805;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Layered background images (same as main registration page) */
+.bg-layer {
+  position: fixed;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  pointer-events: none;
+}
+.bg-main  { z-index: 0; background-image: url('https://framerusercontent.com/images/AzDttCOR71sZKlkIlbZQahyjtCI.png?lossless=1&width=2000&height=1125'); }
+.bg-poster{ z-index: 1; opacity: 0.6; background-image: url('https://framerusercontent.com/images/jI6Oax9C17qQCCuGq0R83vUP2g.png?lossless=1&width=2000&height=1125'); }
+.bg-cloud1{ z-index: 2; background-size: contain; background-repeat: no-repeat; background-position: top left;
+  width: 55vw; height: 31vw; top: 0%; left: -5%;
+  background-image: url('https://framerusercontent.com/images/PUqLPHI41YgCP0yPAqH270KUaQ.png?lossless=1&width=500&height=281'); opacity: 0.55; }
+.bg-cloud2{ z-index: 2; background-size: contain; background-repeat: no-repeat; background-position: top right;
+  width: 55vw; height: 31vw; top: 5%; right: -5%;
+  background-image: url('https://framerusercontent.com/images/PUqLPHI41YgCP0yPAqH270KUaQ.png?lossless=1&width=500&height=281'); opacity: 0.4; transform: scaleX(-1); }
+.bg-noise  {
+  z-index: 3;
+  position: fixed; inset: 0; pointer-events: none;
+  background-image: url('https://framerusercontent.com/images/6mcf62RlDfRfU61Yg5vb2pefpi4.png?lossless=1&width=256&height=256');
+  background-repeat: repeat; background-size: 128px auto; opacity: 0.045;
+}
+/* Dark vignette overlay so the form card is readable */
+.bg-vignette {
+  z-index: 3; position: fixed; inset: 0; pointer-events: none;
+  background: radial-gradient(ellipse 80% 80% at 50% 50%, rgba(10,8,5,0.1) 0%, rgba(10,8,5,0.55) 100%);
+}
+
+.guest-box {
+  width: 100%;
+  max-width: 480px;
+  position: relative;
+  z-index: 10;
+}
+
+.vip-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: .65rem;
+  font-weight: 700;
+  letter-spacing: .2em;
+  text-transform: uppercase;
+  padding: 6px 16px;
+  border: 1px solid var(--accent-dim);
+  color: var(--accent-dim);
+  margin-bottom: 32px;
+}
+.vip-badge::before { content: '◆'; font-size: .5rem; }
+
+.code-info-box {
+  border: 1px solid var(--accent-border);
+  padding: 20px;
+  margin: 20px 0;
+  font-size: .85rem;
+}
+.code-info-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 6px 0;
+  color: var(--accent-dim);
+}
+.code-info-row span:last-child {
+  color: var(--accent);
+  font-weight: 600;
+}
+</style>
+</head>
+<body>
+<!-- Layered background -->
+<div class="bg-layer bg-main"></div>
+<div class="bg-layer bg-poster"></div>
+<div class="bg-layer bg-cloud1" id="gc1"></div>
+<div class="bg-layer bg-cloud2" id="gc2"></div>
+<div class="bg-noise"></div>
+<div class="bg-vignette"></div>
+
+<div class="guest-box">
+  <div class="vip-badge">Special Guest Access</div>
+
+  <div id="loading-state" style="text-align:center;padding:40px 0">
+    <div class="spinner"></div>
+    <p style="margin-top:16px">Validating access...</p>
+  </div>
+
+  <div id="invalid-state" style="display:none;text-align:center;padding:40px 0">
+    <div style="font-size:3rem;margin-bottom:16px">⛔</div>
+    <h3 id="invalid-title">Access Denied</h3>
+    <p id="invalid-desc" style="margin-top:12px"></p>
+  </div>
+
+  <div id="register-state" style="display:none">
+    <h2>Welcome, Guest</h2>
+    <p style="margin-top:8px;margin-bottom:20px" id="guest-label-desc">You have been invited to LocalHost Festival.</p>
+
+    <div class="code-info-box" id="code-info">
+      <!-- Slots remaining intentionally hidden from user -->
+      <div class="code-info-row"><span>+1 Allowed</span><span id="plus-one-info">—</span></div>
+    </div>
+
+    <div id="guest-alert" class="alert"></div>
+
+    <div class="form-group"><label>Full Name</label><input id="g-name" type="text" placeholder="Your name"/></div>
+    <div class="form-group mt-4"><label>Email Address</label><input id="g-email" type="email" placeholder="you@example.com"/></div>
+    <div class="form-group mt-4"><label>Phone (optional)</label><input id="g-phone" type="tel" placeholder="Optional"/></div>
+
+    <div id="plus-one-row" style="display:none;margin-top:16px">
+      <div style="display:flex;align-items:center;gap:12px">
+        <label class="toggle"><input type="checkbox" id="g-plusone"/><span class="toggle-slider"></span></label>
+        <span style="font-size:.85rem">Bringing a +1</span>
+      </div>
+      <p style="font-size:.75rem;color:var(--accent-dim);margin-top:8px">Your companion must arrive with you at the gate.</p>
+    </div>
+
+    <button class="btn btn-full mt-4" onclick="submitGuest()">Claim My Spot →</button>
+  </div>
+
+  <div id="done-state" style="display:none;text-align:center;padding:40px 0">
+    <div style="font-size:4rem;margin-bottom:24px">🎟️</div>
+    <h3 id="done-title">You're Confirmed!</h3>
+    <p id="done-desc" style="margin-top:12px"></p>
+    <div style="font-family:var(--font-h);font-size:1.5rem;letter-spacing:.1em;margin-top:16px" id="done-serial"></div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script>
+const params = new URLSearchParams(window.location.search);
+const code = params.get('code');
+let codeInfo = null;
+
+async function init() {
+  if (!code) { showInvalid('No access code', 'This link is invalid. Please use the full URL provided to you.'); return; }
+  try {
+    const r = await fetch(`/api/guest/validate?code=${encodeURIComponent(code)}`);
+    const d = await r.json();
+    if (!r.ok || !d.ok) {
+      showInvalid(d.error || 'Invalid', d.error || 'This guest access link is invalid or has expired.');
+      return;
+    }
+    codeInfo = d;
+    showRegister(d);
+  } catch(e) {
+    showInvalid('Error', 'Could not validate your access link. Please check your connection.');
+  }
+}
+
+function showInvalid(title, desc) {
+  document.getElementById('loading-state').style.display = 'none';
+  document.getElementById('invalid-state').style.display = 'block';
+  document.getElementById('invalid-title').textContent = title;
+  document.getElementById('invalid-desc').textContent = desc;
+}
+
+function showRegister(info) {
+  document.getElementById('loading-state').style.display = 'none';
+  document.getElementById('register-state').style.display = 'block';
+  document.getElementById('plus-one-info').textContent = info.plusOneAllowed ? 'Yes' : 'No';
+  if (info.plusOneAllowed) document.getElementById('plus-one-row').style.display = 'block';
+  gsap.from('#register-state', { opacity:0, y:30, duration:0.6, ease:'power2.out' });
+}
+
+async function submitGuest() {
+  const name = document.getElementById('g-name').value;
+  const email = document.getElementById('g-email').value;
+  const phone = document.getElementById('g-phone').value;
+  const plusOne = document.getElementById('g-plusone')?.checked || false;
+  if (!name || !email) { showAlert('Name and email required', 'error'); return; }
+
+  const r = await fetch('/api/guest/register', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ code, name, email, phone, plusOne })
+  });
+  const d = await r.json();
+  if (d.ok) {
+    document.getElementById('register-state').style.display = 'none';
+    document.getElementById('done-state').style.display = 'block';
+    document.getElementById('done-title').textContent = d.status === 'pending' ? 'Request Submitted' : "You're Confirmed!";
+    document.getElementById('done-desc').textContent = d.message || 'Check your email for your QR ticket.';
+    document.getElementById('done-serial').textContent = d.serial || '';
+    gsap.from('#done-state', { opacity:0, scale:0.95, duration:0.5, ease:'power2.out' });
+  } else {
+    showAlert(d.error || 'Registration failed', 'error');
+  }
+}
+
+function showAlert(msg, type) {
+  const el = document.getElementById('guest-alert');
+  el.textContent = msg; el.className = `alert alert-${type} show`;
+  setTimeout(() => el.classList.remove('show'), 5000);
+}
+
+// Subtle parallax on clouds
+window.addEventListener('mousemove', (e) => {
+  const dx = (e.clientX / window.innerWidth  - 0.5) * 2;
+  const dy = (e.clientY / window.innerHeight - 0.5) * 2;
+  const c1 = document.getElementById('gc1');
+  const c2 = document.getElementById('gc2');
+  if (c1) c1.style.transform = `translateX(${dx * -20}px) translateY(${dy * -8}px)`;
+  if (c2) c2.style.transform = `scaleX(-1) translateX(${dx * 20}px) translateY(${dy * -6}px)`;
+});
+
+init();
+</script>
+</body>
+</html>

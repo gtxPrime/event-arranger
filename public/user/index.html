@@ -1,0 +1,1645 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>LocalHost Festival — Register</title>
+    <meta
+      name="description"
+      content="Register for LocalHost Festival — the media × startup lab for young creatives."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Gambarino&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/shared/styles.css" />
+    <style>
+      /* ── Base ───────────────────────────────────────────────── */
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+      }
+      html {
+        scroll-behavior: smooth;
+        background: #0a0805;
+      }
+      body {
+        margin: 0;
+        overflow-x: hidden;
+        font-family: var(--font-b, "Switzer", sans-serif);
+      }
+
+      /* ── Nav ────────────────────────────────────────────────── */
+      #main-nav {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 9000;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 20px 40px;
+        backdrop-filter: blur(20px);
+        transition: background 0.4s;
+      }
+      #main-nav .logo {
+        font-weight: 600;
+        font-size: 0.8rem;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: rgb(245, 245, 220);
+      }
+      #nav-user {
+        font-size: 0.75rem;
+        color: rgba(245, 245, 220, 0.6);
+      }
+
+      /* ── Hero ───────────────────────────────────────────────── */
+      .hero {
+        position: relative;
+        width: 100%;
+        min-height: 100vh;
+        overflow: hidden;
+        background: #0a0805;
+      }
+
+      /* All hero layers fill 120% height so parallax has room to move */
+      .hero-layer {
+        position: absolute;
+        top: -10%;
+        left: 0;
+        right: 0;
+        width: 100%;
+        height: 120%;
+        object-fit: cover;
+        object-position: center top;
+        will-change: transform;
+        display: block;
+      }
+
+      /* z-index stack — BG → Poster → TEXT → Bed → Clouds */
+      #layer-bg {
+        z-index: 1;
+      }
+      #layer-poster {
+        z-index: 2;
+      }
+      /* #hero-text at z-index 3 — between poster and bed */
+      #layer-bed {
+        z-index: 4;
+      } /* Bed covers LOWER portion of text */
+
+      /* Title sits in upper 60% of hero — bed covers lower portion */
+      #hero-text {
+        position: absolute;
+        top: 0; left: 0; right: 0;
+        bottom: 38%; 
+        z-index: 8; /* Moved above clouds so it's always visible */
+        display: flex; flex-direction: column;
+        align-items: center; justify-content: flex-end;
+        text-align: center; padding: 0 40px 32px;
+        pointer-events: none;
+      }
+      /* CTA buttons live ABOVE the clouds — own z-index layer */
+      #hero-cta {
+        position: absolute;
+        bottom: 14%; left: 0; right: 0;
+        z-index: 9; /* highest so buttons never get blocked */
+        display: flex; gap: 16px; justify-content: center;
+        pointer-events: all;
+      }
+      #hero-text h1 {
+        font-family: "Gambarino", serif;
+        font-size: clamp(2.8rem, 6vw, 4.5rem);
+        font-weight: 400;
+        letter-spacing: -0.03em;
+        line-height: 1.1;
+        color: rgb(245, 245, 220);
+        margin: 0 0 16px;
+        max-width: 900px;
+      }
+      #hero-text .hero-sub {
+        font-size: clamp(0.9rem, 1.4vw, 1.1rem);
+        font-weight: 500;
+        letter-spacing: -0.02em;
+        line-height: 1.6em;
+        color: rgb(245, 245, 220);
+        max-width: 500px;
+        margin: 0;
+        background: rgba(0, 0, 0, 0.18);
+        padding: 6px 14px;
+        border-radius: 4px;
+      }
+      .btn-hero {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        padding: 14px 28px;
+        border: 1px solid rgb(245, 245, 220);
+        background: rgba(245, 245, 220, 0.12);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        color: rgb(245, 245, 220);
+        font-size: 0.75rem;
+        font-weight: 600;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        cursor: pointer;
+        text-decoration: none;
+        transition:
+          background 0.25s,
+          transform 0.2s;
+        box-shadow: 0 2px 24px rgba(0, 0, 0, 0.18);
+      }
+      .btn-hero:hover {
+        background: rgba(245, 245, 220, 0.22);
+        transform: scale(1.03);
+      }
+      .btn-hero.filled {
+        background: rgba(245, 245, 220, 0.18);
+      }
+
+      /* Cloud layers - completely cover hero area initially */
+      .cloud {
+        position: absolute;
+        will-change: transform;
+        pointer-events: none;
+      }
+      #cloud-1 {
+        z-index: 7;
+        bottom: -15vh;
+        left: -15vw;
+        width: 65vw;
+        height: 100vh;
+        object-fit: cover;
+        opacity: 0.9;
+      }
+      #cloud-2 {
+        z-index: 7;
+        bottom: -15vh;
+        right: -15vw;
+        width: 65vw;
+        height: 100vh;
+        object-fit: cover;
+        opacity: 0.9;
+        transform: scaleX(-1);
+      }
+      #cloud-3 {
+        z-index: 7;
+        top: -15vh;
+        left: -15vw;
+        width: 65vw;
+        height: 80vh;
+        object-fit: cover;
+        opacity: 0.8;
+        transform: scaleY(-1);
+      }
+      #cloud-4 {
+        z-index: 7;
+        top: -15vh;
+        right: -15vw;
+        width: 65vw;
+        height: 80vh;
+        object-fit: cover;
+        opacity: 0.8;
+        transform: scale(-1, -1);
+      }
+
+      /* Scroll Indicator */
+      .scroll-indicator {
+        position: absolute;
+        bottom: 30px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 10;
+        color: rgba(245, 245, 220, 0.8);
+        font-size: 0.7rem;
+        font-weight: 600;
+        letter-spacing: 0.15em;
+        text-transform: uppercase;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+        animation: bob 2s ease-in-out infinite;
+        pointer-events: none;
+      }
+      .scroll-indicator::after {
+        content: "";
+        width: 1px;
+        height: 24px;
+        background: linear-gradient(to bottom, rgba(245, 245, 220, 0.8), transparent);
+      }
+      @keyframes bob {
+        0%, 100% { transform: translate(-50%, 0); }
+        50% { transform: translate(-50%, 8px); }
+      }
+
+      /* Noise overlay */
+      #noise {
+        position: fixed;
+        inset: 0;
+        z-index: 9998;
+        pointer-events: none;
+        background-image: url("https://framerusercontent.com/images/6mcf62RlDfRfU61Yg5vb2pefpi4.png?lossless=1&width=256&height=256");
+        background-repeat: repeat;
+        background-size: 128px auto;
+        opacity: 0.045;
+      }
+
+      /* Fade at bottom of hero into the tiers */
+      #hero-fade {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 220px;
+        z-index: 6;
+        background: linear-gradient(to bottom, transparent, #e8f0ef);
+        pointer-events: none;
+      }
+
+      /* ── Tiers Section ────────────────────────────────────────── */
+      .tiers-section {
+        position: relative;
+        padding: 120px 40px 140px;
+        /* Paper texture from reference + teal tint */
+        background-image: url("https://framerusercontent.com/images/nJGyvcNw1p5BFbBQCVtBpBe4pPk.png?lossless=1&width=1200&height=898");
+        background-color: #e8f0ef;
+        background-size: cover;
+        background-position: center;
+        color: #2f4f4f;
+        overflow: hidden;
+      }
+      /* Teal gradient overlay to unify the texture */
+      .tiers-section::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        z-index: 0;
+        background: linear-gradient(
+          135deg,
+          rgba(232, 240, 239, 0.75) 0%,
+          rgba(210, 228, 225, 0.65) 100%
+        );
+      }
+      .tiers-section::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        z-index: 0;
+        background: radial-gradient(
+          ellipse 80% 60% at 50% 40%,
+          rgba(47, 79, 79, 0.06) 0%,
+          transparent 70%
+        );
+      }
+      .tiers-inner {
+        position: relative;
+        z-index: 2;
+      }
+
+      .tiers-eyebrow {
+        text-align: center;
+        font-size: 0.7rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.25em;
+        color: rgb(47, 79, 79);
+        opacity: 0.7;
+        margin-bottom: 20px;
+      }
+      .tiers-headline {
+        font-family: "Gambarino", serif;
+        font-size: clamp(2.5rem, 5vw, 4rem);
+        letter-spacing: -0.03em;
+        line-height: 1.1;
+        color: rgb(47, 79, 79); /* teal from reference */
+        text-align: center;
+        margin: 0 auto 70px;
+        max-width: 740px;
+      }
+
+      /* Animated SVG decorators for tiers section */
+      .tiers-svg-deco {
+        position: absolute;
+        pointer-events: none;
+        overflow: visible;
+      }
+      .tiers-svg-deco-tl {
+        top: 5%;
+        left: 2%;
+        width: 28vw;
+        max-width: 340px;
+        opacity: 0.15;
+      }
+      .tiers-svg-deco-br {
+        bottom: 5%;
+        right: 2%;
+        width: 28vw;
+        max-width: 340px;
+        opacity: 0.12;
+        transform: rotate(180deg);
+      }
+      .tiers-svg-deco-mid {
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 100vw;
+        max-width: 1200px;
+        opacity: 0.06;
+      }
+
+      @keyframes svgDrift1 {
+        0%,
+        100% {
+          transform: translateY(0px) rotate(0deg);
+        }
+        50% {
+          transform: translateY(-18px) rotate(3deg);
+        }
+      }
+      @keyframes svgDrift2 {
+        0%,
+        100% {
+          transform: translateY(0px) rotate(0deg);
+        }
+        50% {
+          transform: translateY(14px) rotate(-2deg);
+        }
+      }
+      @keyframes svgDrift3 {
+        0%,
+        100% {
+          transform: translateY(0px) scale(1);
+        }
+        50% {
+          transform: translateY(-10px) scale(1.03);
+        }
+      }
+      @keyframes lineDraw {
+        from {
+          stroke-dashoffset: 600;
+        }
+        to {
+          stroke-dashoffset: 0;
+        }
+      }
+      .svg-line-anim {
+        stroke-dasharray: 600;
+        stroke-dashoffset: 600;
+        animation: lineDraw 3s ease forwards;
+      }
+      .svg-float-1 {
+        animation: svgDrift1 7s ease-in-out infinite;
+        transform-origin: center;
+      }
+      .svg-float-2 {
+        animation: svgDrift2 9s ease-in-out infinite;
+        transform-origin: center;
+      }
+      .svg-float-3 {
+        animation: svgDrift3 6s ease-in-out infinite;
+        transform-origin: center;
+      }
+
+      /* Decorative floating cloud images inside the tiers section */
+      .tiers-cloud {
+        position: absolute;
+        pointer-events: none;
+        opacity: 0.22;
+        will-change: transform;
+      }
+      .tiers-cloud-l {
+        left: -8vw;
+        top: 10%;
+        width: 40vw;
+        max-width: 500px;
+      }
+      .tiers-cloud-r {
+        right: -8vw;
+        bottom: 15%;
+        width: 40vw;
+        max-width: 500px;
+        transform: scaleX(-1);
+      }
+
+      /* Ambient glow orbs */
+      .tiers-glow {
+        position: absolute;
+        border-radius: 50%;
+        pointer-events: none;
+        filter: blur(80px);
+      }
+      .tiers-glow-1 {
+        width: 700px;
+        height: 700px;
+        background: rgba(47, 79, 79, 0.1);
+        top: -5%;
+        left: 50%;
+        transform: translateX(-50%);
+      }
+      .tiers-glow-2 {
+        width: 500px;
+        height: 500px;
+        background: rgba(210, 235, 230, 0.25);
+        bottom: 0;
+        right: 0;
+      }
+      .tiers-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 24px;
+        max-width: 1100px;
+        margin: 0 auto;
+      }
+      @media (max-width: 720px) {
+        .tiers-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+      .tier-card {
+        background: rgba(255, 255, 255, 0.55);
+        border: 1px solid rgba(47, 79, 79, 0.12);
+        border-radius: 10px;
+        padding: 40px 34px;
+        display: flex;
+        flex-direction: column;
+        cursor: pointer;
+        transition:
+          transform 0.4s cubic-bezier(0.19, 1, 0.22, 1),
+          box-shadow 0.4s,
+          background 0.3s;
+        backdrop-filter: blur(12px);
+      }
+      .tier-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 28px 60px rgba(47, 79, 79, 0.14);
+        background: rgba(255, 255, 255, 0.82);
+      }
+      .tier-card.selected {
+        border-color: rgb(47, 79, 79);
+        background: rgba(255, 255, 255, 0.92);
+        box-shadow: 0 20px 50px rgba(47, 79, 79, 0.16);
+      }
+      .tier-card.disabled {
+        opacity: 0.38 !important;
+        pointer-events: none;
+        filter: grayscale(0.5);
+      }
+      .tier-icon {
+        font-size: 2.2rem;
+        margin-bottom: 20px;
+      }
+      .tier-card h3 {
+        font-family: "Gambarino", serif;
+        font-size: 1.8rem;
+        letter-spacing: -0.03em;
+        color: rgb(47, 79, 79);
+        margin: 0 0 6px;
+      }
+      .tier-price {
+        font-family: "Gambarino", serif;
+        font-size: 2.4rem;
+        color: rgb(47, 79, 79);
+        margin-bottom: 14px;
+        letter-spacing: -0.03em;
+      }
+      .tier-desc {
+        font-size: 0.9rem;
+        line-height: 1.65;
+        color: rgb(80, 60, 55);
+        flex: 1;
+        margin-bottom: 22px;
+      }
+      .tier-status {
+        font-size: 0.7rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: rgb(47, 79, 79);
+        background: rgba(47, 79, 79, 0.09);
+        padding: 9px 14px;
+        display: inline-block;
+        border-radius: 3px;
+      }
+      /* ── Marquee Band ────────────────────────────────────────── */
+      .marquee-band {
+        background: #2f4f4f; /* teal background to match reference section headers */
+        overflow: hidden;
+        padding: 18px 0;
+        white-space: nowrap;
+      }
+      .marquee-track {
+        display: inline-flex;
+        animation: marquee 22s linear infinite;
+        gap: 0;
+      }
+      .marquee-item {
+        font-family: "Gambarino", serif;
+        font-size: 1.25rem;
+        letter-spacing: -0.01em;
+        color: rgb(245, 245, 220); /* ivory text */
+        opacity: 0.9;
+        padding: 0 48px;
+      }
+      .marquee-dot {
+        color: rgba(245, 245, 220, 0.5);
+        font-size: 0.5rem;
+        vertical-align: middle;
+      }
+      @keyframes marquee {
+        from {
+          transform: translateX(0);
+        }
+        to {
+          transform: translateX(-50%);
+        }
+      }
+
+      /* ── Registration Section ────────────────────────────────── */
+      #register-section {
+        position: relative;
+        background-color: #e8f0ef;
+        background-image: url("https://framerusercontent.com/images/nJGyvcNw1p5BFbBQCVtBpBe4pPk.png?lossless=1&width=1200&height=898");
+        background-size: cover;
+        background-position: center;
+        padding: 120px 40px 160px;
+        overflow: hidden;
+      }
+      /* Teal gradient overlay */
+      #register-section::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        z-index: 0;
+        background: linear-gradient(
+          135deg,
+          rgba(232, 240, 239, 0.72) 0%,
+          rgba(210, 228, 225, 0.6) 100%
+        );
+      }
+      /* Animated SVG grid/dots background for register */
+      #reg-svg-bg {
+        position: absolute;
+        inset: 0;
+        z-index: 1;
+        pointer-events: none;
+        overflow: hidden;
+      }
+      .register-inner {
+        position: relative;
+        z-index: 2;
+      }
+      /* Floating cloud decorations in register */
+      .reg-cloud {
+        position: absolute;
+        pointer-events: none;
+        opacity: 0.2;
+        z-index: 1;
+      }
+      .reg-cloud-tl {
+        top: -4%;
+        left: -6%;
+        width: 35vw;
+        max-width: 420px;
+      }
+      .reg-cloud-br {
+        bottom: -4%;
+        right: -6%;
+        width: 35vw;
+        max-width: 420px;
+        transform: scaleX(-1);
+      }
+      .register-inner {
+        max-width: 640px;
+        margin: 0 auto;
+        position: relative;
+        background: rgba(255, 255, 255, 0.72);
+        border: 1px solid rgba(47,79,79,0.12);
+        border-radius: 12px;
+        padding: 56px 48px;
+        backdrop-filter: blur(14px);
+      }
+      .step {
+        display: none !important;
+      }
+      .step.active {
+        display: block !important;
+      }
+
+      /* Register form theme — teal */
+      .register-inner input[type="text"],
+      .register-inner input[type="email"],
+      .register-inner input[type="tel"],
+      .register-inner input[type="password"] {
+        background: rgba(255, 255, 255, 0.9) !important;
+        border: 1px solid rgba(47, 79, 79, 0.2) !important;
+        color: rgb(47,79,79) !important;
+        border-radius: 4px;
+      }
+      .register-inner input:focus {
+        border-color: rgb(47,79,79) !important;
+        outline: none;
+      }
+      .register-inner label {
+        color: rgba(47,79,79,0.75) !important;
+        font-size: 0.8rem;
+        margin-bottom: 6px;
+      }
+      .register-inner h2 {
+        font-family: "Gambarino", serif;
+        font-size: 2.2rem;
+        letter-spacing: -0.03em;
+        color: rgb(47,79,79);
+        margin-bottom: 8px;
+      }
+      .register-inner p { color: rgba(47,79,79,0.75); }
+      .register-inner .card {
+        background: rgba(255,255,255,0.82);
+        border: 1px solid rgba(47,79,79,0.12);
+        color: rgb(47,79,79);
+      }
+      .register-inner .btn-primary {
+        background: rgb(47,79,79); color: rgb(245,245,220);
+        border: none; padding: 14px 28px; font-size: 0.85rem;
+        font-weight: 600; cursor: pointer; border-radius: 4px; width: 100%;
+        transition: opacity 0.2s, transform 0.2s; margin-top: 24px;
+      }
+      .register-inner .btn-primary:hover { opacity: 0.85; transform: scale(0.99); }
+      .register-inner .btn-outline-dark {
+        background: transparent;
+        border: 1px solid rgba(47,79,79,0.25); color: rgb(47,79,79);
+        padding: 14px 28px; font-size: 0.85rem; font-weight: 600;
+        cursor: pointer; border-radius: 4px; width: 100%;
+        transition: background 0.2s; margin-top: 12px;
+      }
+      .register-inner .btn-outline-dark:hover { background: rgba(47,79,79,0.07); }
+
+      /* Phone group — teal */
+      .phone-group {
+        display: flex; border: 1px solid rgba(47,79,79,0.18);
+        border-radius: 4px; overflow: hidden;
+        background: rgba(255,255,255,0.9); transition: border-color 0.25s;
+      }
+      .phone-group:focus-within { border-color: rgb(47,79,79); }
+      .phone-code-select {
+        -webkit-appearance: none; appearance: none; border: none;
+        border-right: 1px solid rgba(47,79,79,0.12);
+        background: rgba(47,79,79,0.05);
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5'%3E%3Cpath fill='%232f4f4f' d='M0 0l4 5 4-5z'/%3E%3C/svg%3E");
+        background-repeat: no-repeat; background-position: right 8px center;
+        color: rgb(47,79,79); font-size: 0.85rem; font-weight: 500;
+        padding: 0 26px 0 10px; width: 80px; flex-shrink: 0;
+        cursor: pointer; outline: none;
+      }
+      .phone-number-input {
+        flex: 1; background: transparent !important;
+        border: none !important; outline: none !important;
+        padding: 13px 14px !important;
+        color: rgb(47,79,79) !important; font-size: 0.95rem !important;
+      }
+
+      /* Step dots — teal */
+      .step-dots { display: flex; gap: 6px; margin-bottom: 28px; }
+      .step-dot { width: 6px; height: 6px; border-radius: 50%; background: rgba(47,79,79,0.12); transition: background 0.3s; }
+      .step-dot.active { background: rgb(47,79,79); }
+
+      /* Alert */
+      .alert-box {
+        padding: 12px 16px;
+        border-radius: 4px;
+        font-size: 0.85rem;
+        margin-bottom: 20px;
+        display: none;
+      }
+      .alert-box.show {
+        display: block;
+      }
+      .alert-box.error {
+        background: rgba(180, 30, 30, 0.08);
+        border: 1px solid rgba(180, 30, 30, 0.2);
+        color: #b41e1e;
+      }
+      .alert-box.success {
+        background: rgba(30, 120, 60, 0.08);
+        border: 1px solid rgba(30, 120, 60, 0.2);
+        color: #1e783c;
+      }
+
+      /* Spinner */
+      .spinner {
+        border: 2px solid rgba(42, 28, 20, 0.15);
+        border-top-color: #2a1c14;
+        border-radius: 50%;
+        width: 22px;
+        height: 22px;
+        animation: spin 0.8s linear infinite;
+        margin: 0 auto;
+      }
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      /* Closed Banner */
+      #closed-banner {
+        position: fixed;
+        inset: 0;
+        z-index: 99999;
+        background: #faf8f4;
+        display: none !important;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        padding: 40px;
+        color: #2a1c14;
+      }
+      #closed-banner.show {
+        display: flex !important;
+      }
+      #closed-banner h1 {
+        font-family: "Gambarino", serif;
+        font-size: 3.5rem;
+        margin-bottom: 16px;
+      }
+      #closed-banner p {
+        color: #6b5040;
+        max-width: 440px;
+        line-height: 1.6;
+      }
+
+      @media (max-width: 768px) {
+        .hero {
+          height: 100svh;
+        }
+        #hero-text h1 {
+          font-size: 2.2rem;
+        }
+        .tiers-section,
+        #register-section {
+          padding: 80px 20px;
+        }
+        .register-inner {
+          padding: 36px 24px;
+        }
+        .tiers-grid {
+          grid-template-columns: 1fr;
+        }
+        #main-nav {
+          padding: 16px 20px;
+        }
+        #cloud-1,
+        #cloud-2 {
+          width: 80vw;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="noise"></div>
+
+    <!-- Closed Banner -->
+    <div id="closed-banner">
+      <h1>Registration Closed</h1>
+      <p id="closed-desc">
+        All ticket categories are currently closed. Follow us for updates.
+      </p>
+      <button
+        onclick="location.reload()"
+        style="
+          margin-top: 32px;
+          padding: 12px 28px;
+          border: 1px solid #2a1c14;
+          background: transparent;
+          color: #2a1c14;
+          font-size: 0.8rem;
+          font-weight: 600;
+          letter-spacing: 0.1em;
+          text-transform: uppercase;
+          cursor: pointer;
+          border-radius: 4px;
+        "
+      >
+        Refresh
+      </button>
+    </div>
+
+    <!-- Nav -->
+    <nav id="main-nav">
+      <div class="logo">LocalHost</div>
+      <div id="nav-user">Not signed in</div>
+    </nav>
+
+    <!-- ═══════════════════ HERO ═══════════════════ -->
+    <section class="hero" id="hero">
+      <!-- Layer 1: BG room wallpaper (lowest) -->
+      <img
+        id="layer-bg"
+        class="hero-layer"
+        src="https://framerusercontent.com/images/AzDttCOR71sZKlkIlbZQahyjtCI.png?lossless=1&width=2000&height=1125"
+        alt=""
+      />
+
+      <!-- Layer 2: Posters / wall art -->
+      <img
+        id="layer-poster"
+        class="hero-layer"
+        src="https://framerusercontent.com/images/jI6Oax9C17qQCCuGq0R83vUP2g.png?lossless=1&width=2000&height=2160"
+        alt=""
+      />
+
+      <!-- Layer 3: Centered Title Text (sits BETWEEN poster and bed) -->
+      <div id="hero-text">
+        <h1>The media &times; startup lab<br/>empowering young creatives.</h1>
+        <p class="hero-sub">Labs and festivals worldwide at the intersection of technology and creative practice.</p>
+      </div>
+
+      <!-- CTA buttons — z-index 6, always above clouds -->
+      <div id="hero-cta">
+        <button class="btn-hero filled" onclick="scrollToTiers()">Get Tickets ↗</button>
+        <button class="btn-hero" onclick="selectTier('free')">Apply Now ↗</button>
+      </div>
+
+      <!-- Layer 4: Bed — foreground, covers lower portion of text -->
+      <img
+        id="layer-bed"
+        class="hero-layer"
+        src="https://framerusercontent.com/images/wMmuYKWr1PD3YswS5NmxVgu2YQ.png?lossless=1&width=2000&height=2160"
+        alt=""
+      />
+
+      <!-- Layer 5+: Clouds (topmost) -->
+      <img id="cloud-1" class="cloud" src="https://framerusercontent.com/images/PUqLPHI41YgCP0yPAqH270KUaQ.png?lossless=1&width=500&height=281" alt=""/>
+      <img id="cloud-2" class="cloud" src="https://framerusercontent.com/images/PUqLPHI41YgCP0yPAqH270KUaQ.png?lossless=1&width=500&height=281" alt=""/>
+      <img id="cloud-3" class="cloud" src="https://framerusercontent.com/images/DfKhD1nnzWVqMFRKSErjEE4TNg.png?lossless=1&width=500&height=281" alt=""/>
+      <img id="cloud-4" class="cloud" src="https://framerusercontent.com/images/DfKhD1nnzWVqMFRKSErjEE4TNg.png?lossless=1&width=500&height=281" alt=""/>
+
+      <!-- Scroll Indicator -->
+      <div class="scroll-indicator" id="scroll-indicator">Scroll to Explore</div>
+
+      <!-- Fade into tiers -->
+      <div id="hero-fade"></div>
+    </section>
+
+    <!-- ═════════════════ TIERS ═════════════════ -->
+    <section class="tiers-section" id="tiers-section">
+      <!-- Ambient glow orbs -->
+      <div class="tiers-glow tiers-glow-1"></div>
+      <div class="tiers-glow tiers-glow-2"></div>
+
+      <!-- Animated SVG corner decorations -->
+      <svg class="tiers-svg-deco tiers-svg-deco-tl" viewBox="0 0 340 340" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <g class="svg-float-1">
+          <circle cx="170" cy="170" r="140" stroke="rgb(47,79,79)" stroke-width="1" stroke-dasharray="8 14" class="svg-line-anim"/>
+          <circle cx="170" cy="170" r="80" stroke="rgb(47,79,79)" stroke-width="0.6" stroke-dasharray="4 10" class="svg-line-anim" style="animation-delay:0.8s"/>
+          <line x1="30" y1="170" x2="310" y2="170" stroke="rgb(47,79,79)" stroke-width="0.6" stroke-dasharray="6 8" class="svg-line-anim" style="animation-delay:0.4s"/>
+          <line x1="170" y1="30" x2="170" y2="310" stroke="rgb(47,79,79)" stroke-width="0.6" stroke-dasharray="6 8" class="svg-line-anim" style="animation-delay:0.6s"/>
+          <circle cx="170" cy="170" r="5" fill="rgb(47,79,79)" opacity="0.5"/>
+          <circle cx="170" cy="30" r="3" fill="rgb(47,79,79)" opacity="0.4"/>
+          <circle cx="170" cy="310" r="3" fill="rgb(47,79,79)" opacity="0.4"/>
+          <circle cx="30" cy="170" r="3" fill="rgb(47,79,79)" opacity="0.4"/>
+          <circle cx="310" cy="170" r="3" fill="rgb(47,79,79)" opacity="0.4"/>
+        </g>
+      </svg>
+      <svg class="tiers-svg-deco tiers-svg-deco-br" viewBox="0 0 340 340" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <g class="svg-float-2">
+          <circle cx="170" cy="170" r="140" stroke="rgb(47,79,79)" stroke-width="1" stroke-dasharray="5 12"/>
+          <circle cx="170" cy="170" r="90" stroke="rgb(47,79,79)" stroke-width="0.7" stroke-dasharray="3 8"/>
+          <circle cx="170" cy="170" r="40" stroke="rgb(47,79,79)" stroke-width="0.5"/>
+          <path d="M30 30 L310 310 M310 30 L30 310" stroke="rgb(47,79,79)" stroke-width="0.5" stroke-dasharray="5 10"/>
+        </g>
+      </svg>
+      <!-- Floating cloud decorations -->
+      <img class="tiers-cloud tiers-cloud-l"
+        src="https://framerusercontent.com/images/PUqLPHI41YgCP0yPAqH270KUaQ.png?lossless=1&width=500&height=281"
+        alt=""/>
+      <img class="tiers-cloud tiers-cloud-r"
+        src="https://framerusercontent.com/images/PUqLPHI41YgCP0yPAqH270KUaQ.png?lossless=1&width=500&height=281"
+        alt=""/>
+
+      <div class="tiers-inner">
+        <div class="tiers-eyebrow">LocalHost Festival 2026</div>
+        <h2 class="tiers-headline">
+          For the world's best talents<br />to go full-time on what they love.
+        </h2>
+        <div class="tiers-grid">
+          <div id="tier-free" class="tier-card" onclick="selectTier('free')">
+            <div class="tier-icon">🎫</div>
+            <h3>Free Entry</h3>
+            <div class="tier-price">₹0</div>
+            <p class="tier-desc">
+              Limited slots. First <span id="fcfs-limit">200</span> registrants
+              are auto-approved. Others enter the lucky draw.
+            </p>
+            <div class="tier-status" id="status-free">Checking…</div>
+          </div>
+
+          <div id="tier-paid" class="tier-card" onclick="selectTier('paid')">
+            <div class="tier-icon">✨</div>
+            <h3>Paid Entry</h3>
+            <div class="tier-price" id="price-paid">₹499</div>
+            <p class="tier-desc">
+              Guaranteed admission with premium perks and reserved seating
+              during all key sessions.
+            </p>
+            <div class="tier-status" id="status-paid">Checking…</div>
+          </div>
+
+          <div id="tier-vip" class="tier-card" onclick="selectTier('vip')">
+            <div class="tier-icon">👑</div>
+            <h3>VIP Access</h3>
+            <div class="tier-price" id="price-vip">₹999</div>
+            <p class="tier-desc">
+              Full festival access. Networking lounge, exclusive workshops, and
+              private closing gala.
+            </p>
+            <div class="tier-status" id="status-vip">Checking…</div>
+          </div>
+
+          <div
+            id="tier-volunteer"
+            class="tier-card"
+            onclick="selectTier('volunteer')"
+          >
+            <div class="tier-icon">🏗️</div>
+            <h3>Volunteer</h3>
+            <div class="tier-price">Free</div>
+            <p class="tier-desc">
+              Help build the lab. Deep behind-the-scenes access and direct
+              network with creators and founders.
+            </p>
+            <div class="tier-status" id="status-vol">Code Required</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═════════════════ MARQUEE BAND ═════════════════ -->
+    <div class="marquee-band">
+      <div class="marquee-track">
+        <!-- Two identical sets for seamless loop -->
+        <span class="marquee-item">Media ✦</span
+        ><span class="marquee-item">Startups ✦</span>
+        <span class="marquee-item">Technology ✦</span
+        ><span class="marquee-item">Creative Practice ✦</span>
+        <span class="marquee-item">Bengaluru 2026 ✦</span
+        ><span class="marquee-item">LocalHost Festival ✦</span>
+        <span class="marquee-item">Apply Now ✦</span
+        ><span class="marquee-item">Young Creatives ✦</span>
+        <span class="marquee-item">Media ✦</span
+        ><span class="marquee-item">Startups ✦</span>
+        <span class="marquee-item">Technology ✦</span
+        ><span class="marquee-item">Creative Practice ✦</span>
+        <span class="marquee-item">Bengaluru 2026 ✦</span
+        ><span class="marquee-item">LocalHost Festival ✦</span>
+        <span class="marquee-item">Apply Now ✦</span
+        ><span class="marquee-item">Young Creatives ✦</span>
+      </div>
+    </div>
+
+    <!-- ═════════════════ REGISTER ═════════════════ -->
+    <section id="register-section">
+      <!-- Animated SVG dot grid background -->
+      <div id="reg-svg-bg">
+        <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg" style="position:absolute;inset:0">
+          <defs>
+            <pattern id="dot-grid" x="0" y="0" width="40" height="40" patternUnits="userSpaceOnUse">
+              <circle cx="20" cy="20" r="1.5" fill="rgb(47,79,79)" opacity="0.25"/>
+            </pattern>
+            <pattern id="big-grid" x="0" y="0" width="120" height="120" patternUnits="userSpaceOnUse">
+              <rect width="120" height="120" fill="none" stroke="rgb(47,79,79)" stroke-width="0.4" opacity="0.08"/>
+            </pattern>
+          </defs>
+          <rect width="100%" height="100%" fill="url(#big-grid)"/>
+          <rect width="100%" height="100%" fill="url(#dot-grid)"/>
+          <!-- Animated floating rings -->
+          <circle cx="15%" cy="30%" r="80" fill="none" stroke="rgb(47,79,79)" stroke-width="0.7" opacity="0.12"
+            style="animation: svgDrift1 11s ease-in-out infinite"/>
+          <circle cx="85%" cy="65%" r="120" fill="none" stroke="rgb(47,79,79)" stroke-width="0.5" opacity="0.08"
+            style="animation: svgDrift2 14s ease-in-out infinite"/>
+          <circle cx="50%" cy="10%" r="50" fill="none" stroke="rgb(47,79,79)" stroke-width="0.6" opacity="0.1"
+            style="animation: svgDrift3 8s ease-in-out infinite"/>
+          <!-- Diagonal accent lines -->
+          <line x1="0" y1="0" x2="30%" y2="100%" stroke="rgb(47,79,79)" stroke-width="0.4" opacity="0.07"/>
+          <line x1="100%" y1="0" x2="70%" y2="100%" stroke="rgb(47,79,79)" stroke-width="0.4" opacity="0.07"/>
+        </svg>
+      </div>
+      <!-- Floating cloud deco -->
+      <img class="reg-cloud reg-cloud-tl"
+        src="https://framerusercontent.com/images/PUqLPHI41YgCP0yPAqH270KUaQ.png?lossless=1&width=500&height=281"
+        alt=""/>
+      <img class="reg-cloud reg-cloud-br"
+        src="https://framerusercontent.com/images/PUqLPHI41YgCP0yPAqH270KUaQ.png?lossless=1&width=500&height=281"
+        alt=""/>
+      <div class="register-inner">
+        <div class="step-dots" id="step-dots">
+          <div class="step-dot active"></div>
+          <div class="step-dot"></div>
+          <div class="step-dot"></div>
+        </div>
+        <div class="alert-box" id="alert-global"></div>
+
+        <!-- Step 0: Auth -->
+        <div class="step active" id="step-auth">
+          <h2>Identify Yourself</h2>
+          <p style="margin-bottom: 36px">Choose how you'd like to continue.</p>
+          <div id="auth-methods-container">
+            <div style="padding: 32px 0; text-align: center">
+              <div class="spinner"></div>
+            </div>
+          </div>
+          <!-- No-Auth Fallback -->
+          <div id="no-auth-form" style="display: none">
+            <div class="form-group">
+              <label>Full Name</label>
+              <input id="na-name" type="text" placeholder="Jane Doe" />
+            </div>
+            <div
+              style="
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 16px;
+                margin-top: 16px;
+              "
+            >
+              <div class="form-group">
+                <label>Email</label>
+                <input
+                  id="na-email"
+                  type="email"
+                  placeholder="jane@example.com"
+                />
+              </div>
+              <div class="form-group">
+                <label>Phone</label>
+                <div class="phone-group">
+                  <select id="na-country" class="phone-code-select">
+                    <option value="+91">🇮🇳 +91</option>
+                    <option value="+1">🇺🇸 +1</option>
+                    <option value="+44">🇬🇧 +44</option>
+                    <option value="+971">🇦🇪 +971</option>
+                    <option value="+65">🇸🇬 +65</option>
+                  </select>
+                  <input
+                    id="na-phone"
+                    class="phone-number-input"
+                    type="tel"
+                    placeholder="9876543210"
+                  />
+                </div>
+              </div>
+            </div>
+            <button
+              class="btn-primary"
+              id="btn-noauth"
+              onclick="submitNoAuth()"
+            >
+              Continue →
+            </button>
+          </div>
+        </div>
+
+        <!-- Step 1: Form -->
+        <div class="step" id="step-form">
+          <div id="tier-form-container"></div>
+        </div>
+
+        <!-- Step 2: Done -->
+        <div
+          class="step"
+          id="step-done"
+          style="text-align: center; padding: 32px 0"
+        >
+          <div style="font-size: 4rem; margin-bottom: 20px">🎟️</div>
+          <h2 id="done-title">Confirmed!</h2>
+          <p id="done-desc" style="margin-top: 12px"></p>
+          <div
+            id="done-serial"
+            style="
+              font-family: &quot;Gambarino&quot;, serif;
+              font-size: 2.2rem;
+              color: #2a1c14;
+              letter-spacing: 0.08em;
+              margin-top: 28px;
+            "
+          ></div>
+          <button
+            onclick="location.reload()"
+            style="
+              margin-top: 40px;
+              padding: 12px 28px;
+              border: 1px solid rgba(42, 28, 20, 0.3);
+              background: transparent;
+              color: #2a1c14;
+              font-size: 0.8rem;
+              font-weight: 600;
+              letter-spacing: 0.08em;
+              text-transform: uppercase;
+              cursor: pointer;
+              border-radius: 4px;
+            "
+          >
+            Return Home
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script>
+      gsap.registerPlugin(ScrollTrigger);
+
+      let settings = {},
+        user = null,
+        selectedTier = null,
+        confirmationResult = null,
+        firebaseConfigured = false;
+
+      /* ── INIT ──────────────────────────────────────────────────── */
+      async function init() {
+        try {
+          const [confRes, setRes, userRes] = await Promise.all([
+            fetch("/api/auth/firebase-config")
+              .then((r) => r.json())
+              .catch(() => ({})),
+            fetch("/api/tickets/public-settings").then((r) => r.json()),
+            fetch("/api/auth/me")
+              .then((r) => r.json())
+              .catch(() => ({})),
+          ]);
+          settings = setRes;
+          user = userRes.user || null;
+
+          if (confRes.configured) {
+            firebaseConfigured = true;
+            try {
+              firebase.initializeApp(confRes);
+            } catch (e) {}
+          }
+
+          renderTierStates();
+          checkAllClosed();
+          renderAuthUI();
+          if (user) updateNavUser();
+          setupParallax();
+        } catch (e) {
+          console.error("Init error:", e);
+        }
+      }
+
+      /* ── TIER STATE ────────────────────────────────────────────── */
+      function renderTierStates() {
+        if (settings.fcfs_limit)
+          document.getElementById("fcfs-limit").textContent =
+            settings.fcfs_limit;
+        if (settings.paid_price)
+          document.getElementById("price-paid").textContent =
+            `₹${settings.paid_price}`;
+        if (settings.vip_price)
+          document.getElementById("price-vip").textContent =
+            `₹${settings.vip_price}`;
+
+        setTier(
+          "tier-free",
+          "status-free",
+          settings.free_enabled !== "0",
+          "Available",
+        );
+        setTier(
+          "tier-paid",
+          "status-paid",
+          settings.paid_enabled !== "0",
+          "Selling Fast",
+        );
+        setTier(
+          "tier-vip",
+          "status-vip",
+          settings.vip_enabled !== "0",
+          "Limited",
+        );
+        setTier(
+          "tier-volunteer",
+          "status-vol",
+          settings.volunteer_enabled !== "0",
+          "Code Required",
+        );
+      }
+      function setTier(cardId, statusId, open, openLabel) {
+        const card = document.getElementById(cardId);
+        const stat = document.getElementById(statusId);
+        if (!card || !stat) return;
+        if (open) {
+          card.classList.remove("disabled");
+          stat.textContent = openLabel;
+        } else {
+          card.classList.add("disabled");
+          stat.textContent = "Closed";
+        }
+      }
+
+      function checkAllClosed() {
+        const keys = [
+          "free_enabled",
+          "paid_enabled",
+          "vip_enabled",
+          "volunteer_enabled",
+        ];
+        if (keys.every((k) => settings[k] === "0")) {
+          document.getElementById("closed-banner").classList.add("show");
+        }
+      }
+
+      /* ── AUTH UI ───────────────────────────────────────────────── */
+      function renderAuthUI() {
+        const container = document.getElementById("auth-methods-container");
+        const noAuthDiv = document.getElementById("no-auth-form");
+        const emailOn = settings.auth_email_enabled === "1";
+        const googleOn = settings.auth_google_enabled === "1";
+        const phoneOn = settings.auth_phone_enabled === "1";
+
+        if (user) {
+          container.innerHTML = `
+        <div class="card" style="text-align:center;padding:28px;border-radius:8px">
+          <p style="font-size:.7rem;text-transform:uppercase;letter-spacing:.12em;color:#6b5040;margin-bottom:8px">Signed in as</p>
+          <p style="font-size:1.1rem;font-weight:600;color:#2a1c14;margin-bottom:20px">${user.name || user.email}</p>
+          <button class="btn-primary" style="margin-top:0" onclick="continueToForm()">Continue to Application →</button>
+          <button class="btn-outline-dark" onclick="logout()">Switch Account</button>
+        </div>`;
+          return;
+        }
+
+        // If Firebase is NOT configured, force no-auth mode regardless of toggles
+        if (!firebaseConfigured || (!emailOn && !googleOn && !phoneOn)) {
+          container.style.display = "none";
+          noAuthDiv.style.display = "block";
+          return;
+        }
+
+        let html = "";
+        if (googleOn)
+          html += `<button onclick="loginGoogle()" style="display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:14px;border:1px solid rgba(42,28,20,0.15);background:rgba(255,255,255,0.8);color:#2a1c14;font-size:0.85rem;font-weight:600;cursor:pointer;border-radius:4px;margin-bottom:12px"><img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="18"/>Continue with Google</button>`;
+        if (emailOn)
+          html += `
+      <div style="background:rgba(255,255,255,0.7);border:1px solid rgba(42,28,20,0.1);border-radius:8px;padding:24px;margin-bottom:12px">
+        <div class="form-group"><label>Email</label><input type="email" id="fb-email" placeholder="you@example.com"/></div>
+        <div class="form-group" style="margin-top:12px"><label>Password</label><input type="password" id="fb-pass" placeholder="••••••••"/></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px">
+          <button class="btn-primary" style="margin-top:0" onclick="loginEmail()">Sign In</button>
+          <button class="btn-outline-dark" style="margin-top:0" onclick="registerEmail()">Sign Up</button>
+        </div>
+      </div>`;
+        if (phoneOn)
+          html += `
+      <div style="background:rgba(255,255,255,0.7);border:1px solid rgba(42,28,20,0.1);border-radius:8px;padding:24px">
+        <div id="p-step-1">
+          <div class="form-group"><label>Phone Number</label>
+            <div class="phone-group">
+              <select id="fb-p-country" class="phone-code-select"><option value="+91">🇮🇳 +91</option><option value="+1">🇺🇸 +1</option><option value="+44">🇬🇧 +44</option></select>
+              <input type="tel" id="fb-p-num" class="phone-number-input" placeholder="9876543210"/>
+            </div>
+          </div>
+          <div id="fb-recaptcha" style="margin-top:8px"></div>
+          <button class="btn-primary" style="margin-top:8px" onclick="sendOTP()">Send OTP</button>
+        </div>
+        <div id="p-step-2" style="display:none">
+          <div class="form-group"><label>6-digit OTP</label><input type="text" id="fb-p-otp" placeholder="123456"/></div>
+          <button class="btn-primary" onclick="verifyOTP()">Verify →</button>
+        </div>
+      </div>`;
+        container.innerHTML = html;
+      }
+
+      /* ── FIREBASE ──────────────────────────────────────────────── */
+      async function handleFB(fbUser) {
+        const idToken = await fbUser.getIdToken();
+        const res = await fetch("/api/auth/firebase", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            idToken,
+            name: fbUser.displayName,
+            phone: fbUser.phoneNumber,
+          }),
+        });
+        const d = await res.json();
+        if (d.ok) {
+          user = d.user;
+          updateNavUser();
+          renderAuthUI();
+          if (selectedTier) continueToForm();
+        } else showAlert(d.error);
+      }
+      async function loginGoogle() {
+        try {
+          const r = await firebase
+            .auth()
+            .signInWithPopup(new firebase.auth.GoogleAuthProvider());
+          await handleFB(r.user);
+        } catch (e) {
+          showAlert(e.message);
+        }
+      }
+      async function loginEmail() {
+        try {
+          const r = await firebase
+            .auth()
+            .signInWithEmailAndPassword(
+              document.getElementById("fb-email").value,
+              document.getElementById("fb-pass").value,
+            );
+          await handleFB(r.user);
+        } catch (e) {
+          showAlert(e.message);
+        }
+      }
+      async function registerEmail() {
+        try {
+          const r = await firebase
+            .auth()
+            .createUserWithEmailAndPassword(
+              document.getElementById("fb-email").value,
+              document.getElementById("fb-pass").value,
+            );
+          await handleFB(r.user);
+        } catch (e) {
+          showAlert(e.message);
+        }
+      }
+      async function sendOTP() {
+        try {
+          window.recaptchaVerifier = new firebase.auth.RecaptchaVerifier(
+            "fb-recaptcha",
+            { size: "invisible" },
+          );
+          confirmationResult = await firebase
+            .auth()
+            .signInWithPhoneNumber(
+              document.getElementById("fb-p-country").value +
+                document.getElementById("fb-p-num").value,
+              window.recaptchaVerifier,
+            );
+          document.getElementById("p-step-1").style.display = "none";
+          document.getElementById("p-step-2").style.display = "block";
+          showAlert("OTP sent!", "success");
+        } catch (e) {
+          showAlert(e.message);
+        }
+      }
+      async function verifyOTP() {
+        try {
+          const r = await confirmationResult.confirm(
+            document.getElementById("fb-p-otp").value,
+          );
+          await handleFB(r.user);
+        } catch (e) {
+          showAlert(e.message);
+        }
+      }
+
+      /* ── NO-AUTH ───────────────────────────────────────────────── */
+      async function submitNoAuth() {
+        const name = document.getElementById("na-name").value.trim();
+        const email = document.getElementById("na-email").value.trim();
+        const code = document.getElementById("na-country").value;
+        const num = document.getElementById("na-phone").value.trim();
+        if (!name || !email || !num)
+          return showAlert("Please fill all fields.");
+        const btn = document.getElementById("btn-noauth");
+        btn.innerHTML =
+          '<div class="spinner" style="border-top-color:#faf8f4;border-color:rgba(255,255,255,0.2)"></div>';
+        btn.disabled = true;
+        const res = await fetch("/api/auth/noauth", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name, email, phone: code + num }),
+        });
+        const d = await res.json();
+        if (d.ok) {
+          user = d.user;
+          updateNavUser();
+          continueToForm();
+        } else {
+          showAlert(d.error);
+          btn.textContent = "Continue →";
+          btn.disabled = false;
+        }
+      }
+
+      async function logout() {
+        if (firebaseConfigured) {
+          try { await firebase.auth().signOut(); } catch (e) {}
+        }
+        await fetch("/api/auth/logout", { method: "POST" });
+        location.reload();
+      }
+
+      /* ── STEP MANAGEMENT ───────────────────────────────────────── */
+      function selectTier(tier) {
+        selectedTier = tier;
+        document
+          .querySelectorAll(".tier-card")
+          .forEach((c) => c.classList.remove("selected"));
+        const card = document.getElementById(`tier-${tier}`);
+        if (card) card.classList.add("selected");
+        if (!user) {
+          scrollToRegister();
+        } else {
+          continueToForm();
+        }
+      }
+
+      // Safely navigate to the tier form (step 1)
+      function continueToForm() {
+        if (!selectedTier) selectedTier = 'free';
+        renderTierForm();
+        goToStep(1);
+        scrollToRegister();
+      }
+
+      function goToStep(n) {
+        const steps = document.querySelectorAll(".step");
+        steps.forEach((s, i) => s.classList.toggle("active", i === n));
+        const dots = document.querySelectorAll(".step-dot");
+        dots.forEach((d, i) => d.classList.toggle("active", i <= n));
+      }
+
+      function renderTierForm() {
+        const c = document.getElementById("tier-form-container");
+        const paidP = settings.paid_price || "499";
+        const vipP = settings.vip_price || "999";
+        if (selectedTier === "free") {
+          c.innerHTML = `
+        <h2>Free Entry</h2>
+        <p style="margin-bottom:28px">Applying as <b>${user.email}</b></p>
+        <div class="form-group"><label>Full Name</label><input id="f-name" type="text" value="${esc(user.name || "")}"/></div>
+        <button class="btn-primary" onclick="submitFree()">Apply Now →</button>`;
+        } else if (selectedTier === "paid" || selectedTier === "vip") {
+          const price = selectedTier === "paid" ? paidP : vipP;
+          const label = selectedTier === "paid" ? "Paid Entry" : "VIP Access";
+          c.innerHTML = `
+        <h2>${label}</h2>
+        <p style="margin-bottom:28px">One guaranteed entry — ₹${price}</p>
+        <div class="form-group"><label>Attendee Name</label><input id="p-name" type="text" value="${esc(user.name || "")}"/></div>
+        <div class="form-group" style="margin-top:14px"><label>Attendee Email</label><input id="p-email" type="email" value="${esc(user.email || "")}"/></div>
+        <button class="btn-primary" onclick="submitPaid()">Continue to Payment →</button>`;
+        } else {
+          c.innerHTML = `
+        <h2>Volunteer Entry</h2>
+        <div class="form-group" style="margin-top:8px"><label>Access Code</label><input id="v-code" type="text" placeholder="Your secret code"/></div>
+        <div class="form-group" style="margin-top:14px"><label>Full Name</label><input id="v-name" type="text" value="${esc(user.name || "")}"/></div>
+        <button class="btn-primary" onclick="submitVol()">Submit →</button>`;
+        }
+      }
+
+      async function submitFree() {
+        const n = document.getElementById("f-name").value;
+        const res = await fetch("/api/register/free", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: n,
+            email: user.email,
+            phone: user.phone,
+          }),
+        });
+        const d = await res.json();
+        if (d.ok) showSuccess(d);
+        else showAlert(d.error);
+      }
+      async function submitPaid() {
+        const n = document.getElementById("p-name").value;
+        const e = document.getElementById("p-email").value;
+        const endpoint =
+          selectedTier === "vip" ? "/api/register/vip" : "/api/register/paid";
+        const res = await fetch(endpoint, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            tickets: [{ name: n, email: e, phone: user.phone }],
+          }),
+        });
+        const d = await res.json();
+        if (d.ok) location.href = `/user/checkout?order=${d.orderId}`;
+        else showAlert(d.error);
+      }
+      async function submitVol() {
+        const code = document.getElementById("v-code").value;
+        const name = document.getElementById("v-name").value;
+        const res = await fetch("/api/register/volunteer", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            code,
+            name,
+            email: user.email,
+            phone: user.phone,
+          }),
+        });
+        const d = await res.json();
+        if (d.ok) showSuccess(d);
+        else showAlert(d.error);
+      }
+      function showSuccess(d) {
+        document.getElementById("done-desc").textContent =
+          d.message ||
+          "Your spot is secured. Check your email for the QR ticket.";
+        document.getElementById("done-serial").textContent = d.serial || "";
+        goToStep(2);
+      }
+
+      /* ── UTILS ─────────────────────────────────────────────────── */
+      function updateNavUser() {
+        if (user) document.getElementById("nav-user").textContent = user.email;
+      }
+      function scrollToRegister() {
+        document
+          .getElementById("register-section")
+          .scrollIntoView({ behavior: "smooth" });
+      }
+      function scrollToTiers() {
+        document
+          .getElementById("tiers-section")
+          .scrollIntoView({ behavior: "smooth" });
+      }
+      function showAlert(msg, type = "error") {
+        const el = document.getElementById("alert-global");
+        el.textContent = msg;
+        el.className = `alert-box ${type} show`;
+        setTimeout(() => el.classList.remove("show"), 5000);
+      }
+      function esc(s) {
+        return String(s)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;");
+      }
+
+      /* ── PARALLAX ──────────────────────────────────────────────── */
+      function setupParallax() {
+        // Pin the entire hero section so you can scroll to "part the clouds"
+        let tl = gsap.timeline({
+          scrollTrigger: {
+            trigger: ".hero",
+            start: "top top",
+            end: "+=200%", // pin for 2 full viewport heights of scrolling
+            pin: true,
+            scrub: 1.5, // slightly smooth scrubbing
+          }
+        });
+
+        // Clouds split directly to the sides. (Moving 80vw leaves them slightly on screen edges)
+        tl.to("#cloud-1", { x: "-80vw", y: "15vh", ease: "power2.inOut" }, 0);
+        tl.to("#cloud-2", { x: "80vw", y: "15vh", ease: "power2.inOut" }, 0);
+        tl.to("#cloud-3", { x: "-80vw", y: "-15vh", ease: "power2.inOut" }, 0);
+        tl.to("#cloud-4", { x: "80vw", y: "-15vh", ease: "power2.inOut" }, 0);
+
+        // Keep subtle parallax depth on background elements while clouds part
+        tl.to("#layer-bg", { yPercent: 12, ease: "none" }, 0);
+        tl.to("#layer-poster", { yPercent: 22, ease: "none" }, 0);
+        tl.to("#hero-text", { yPercent: -15, scale: 0.97, ease: "none" }, 0);
+        tl.to("#layer-bed", { yPercent: 35, ease: "none" }, 0);
+        tl.to("#hero-cta", { yPercent: -15, ease: "none" }, 0);
+        
+        // Hide scroll indicator immediately on scroll
+        tl.to("#scroll-indicator", { opacity: 0, duration: 0.2 }, 0);
+
+        // At the very end, fade out the hero layer text slightly as we transition to tiers
+        tl.to("#hero-text, #hero-cta", { opacity: 0.1, ease: "power1.in" }, 0.8);
+
+        // Tier cards entrance
+        gsap.from(".tier-card", {
+          y: 50,
+          opacity: 0,
+          stagger: 0.08,
+          duration: 0.9,
+          ease: "power3.out",
+          scrollTrigger: { trigger: ".tiers-section", start: "top 80%" },
+        });
+        // Register section entrance
+        gsap.from(".register-inner", {
+          y: 40,
+          opacity: 0,
+          duration: 0.8,
+          ease: "power2.out",
+          scrollTrigger: { trigger: "#register-section", start: "top 80%" },
+        });
+      }
+
+      init();
+    </script>
+  </body>
+</html>

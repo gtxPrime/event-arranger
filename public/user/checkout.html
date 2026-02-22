@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Checkout — LocalHost Festival</title>
+<link rel="stylesheet" href="/shared/styles.css"/>
+<style>
+body { display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:100vh; padding:40px 20px; }
+.checkout-box { width:100%; max-width:480px; }
+.timer-ring { position:relative; width:120px; height:120px; margin:32px auto; }
+.timer-svg { transform: rotate(-90deg); }
+.timer-bg { fill:none; stroke:var(--accent-border); stroke-width:4; }
+.timer-progress { fill:none; stroke:var(--accent); stroke-width:4; stroke-linecap:square; transition: stroke-dashoffset 1s linear; }
+.timer-text {
+  position:absolute; inset:0; display:flex; flex-direction:column;
+  align-items:center; justify-content:center;
+  font-family:var(--font-h); font-size:1.6rem; letter-spacing:-0.03em;
+}
+.timer-text small { font-family:var(--font-b); font-size:.6rem; letter-spacing:.1em; text-transform:uppercase; color:var(--accent-dim); margin-top:2px; }
+.payment-info { border:1px solid var(--accent-border); padding:24px; margin:24px 0; }
+.payment-row { display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid rgba(245,245,220,0.06); font-size:.85rem; }
+.payment-row:last-child { border-bottom:none; }
+.payment-row .label { color:var(--accent-dim); }
+.expired-state { text-align:center; padding:40px 0; display:none; }
+
+/* Razorpay Demo Widget */
+.payment-widget { border:1px solid #e2e8f0; border-radius: 8px; overflow: hidden; display: flex; flex-direction: column; background: #fff; color: #1a202c; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin: 24px 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+.rp-header { background: #3399cc; padding: 20px; color: white; }
+.rp-body { display: flex; min-height: 280px; }
+.rp-sidebar { width: 140px; background: #f8fafc; border-right: 1px solid #e2e8f0; }
+.rp-method { padding: 16px 16px; font-size: 0.85rem; color: #4a5568; cursor: pointer; border-left: 3px solid transparent; transition: all 0.2s;}
+.rp-method.active { border-left-color: #3399cc; background: #fff; font-weight: 600; color: #2d3748; }
+.rp-method:hover:not(.active) { background: #edf2f7; }
+.rp-content { flex: 1; padding: 24px; position:relative; }
+.rp-input { width: 100%; padding: 12px; border: 1px solid #cbd5e0; border-radius: 4px; color: #4a5568; font-family: inherit; }
+.rp-btn { width: 100%; background: #3399cc; color: white; padding: 14px; border: none; border-radius: 4px; font-weight: 600; margin-top: 24px; cursor: pointer; transition: opacity 0.2s;}
+.rp-btn:hover { opacity: 0.9; }
+</style>
+</head>
+<body>
+<div class="checkout-box">
+  <div class="section-label" style="display:flex;align-items:center;gap:8px;margin-bottom:32px;font-size:.7rem;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:var(--accent-dim)">
+   <span style="display:block;width:32px;height:1px;background:var(--accent-dim)"></span>
+    Checkout
+  </div>
+
+  <div id="checkout-active">
+    <h2>Complete Your Payment</h2>
+    <p style="margin-top:8px">Your seats are held. Complete payment before the timer runs out.</p>
+
+    <div class="timer-ring">
+      <svg class="timer-svg" viewBox="0 0 120 120" width="120" height="120">
+        <circle class="timer-bg" cx="60" cy="60" r="54"/>
+        <circle class="timer-progress" id="timer-arc" cx="60" cy="60" r="54" stroke-dasharray="339.3" stroke-dashoffset="0"/>
+      </svg>
+      <div class="timer-text">
+        <span id="timer-display">5:00</span>
+        <small>remaining</small>
+      </div>
+    </div>
+
+    <div class="payment-info">
+      <div id="order-details">Loading order...</div>
+    </div>
+
+    <div class="payment-widget">
+      <div class="rp-header">
+        <div style="display:flex; justify-content: space-between; align-items: center;">
+          <h3 style="margin: 0; font-weight: 500; font-size: 1.1rem;">LocalHost Festival</h3>
+          <div style="font-size: 1.1rem; font-weight: 600;">₹499.00</div>
+        </div>
+        <div style="font-size: 0.8rem; margin-top: 6px; opacity: 0.9;">Demo Payment / Test Mode</div>
+      </div>
+      <div class="rp-body">
+        <div class="rp-sidebar">
+           <div class="rp-method active" onclick="switchMethod(event, 'card')">💳 Card</div>
+           <div class="rp-method" onclick="switchMethod(event, 'upi')">📱 UPI / QR</div>
+           <div class="rp-method" onclick="switchMethod(event, 'netbanking')">🏦 Netbanking</div>
+        </div>
+        <div class="rp-content">
+           <div id="rp-card-view" class="rp-view">
+              <p style="font-size: 0.85rem; margin-bottom: 12px; color: #4a5568">Enter card details</p>
+              <input type="text" class="rp-input" placeholder="Card Number" value="4111 1111 1111 1111" style="margin-bottom: 12px;" readonly>
+              <div style="display:flex; gap:12px;">
+                <input type="text" class="rp-input" placeholder="Expiry" value="12/28" style="width: 50%;" readonly>
+                <input type="text" class="rp-input" placeholder="CVV" value="123" style="width: 50%;" readonly>
+              </div>
+           </div>
+           
+           <div id="rp-upi-view" class="rp-view" style="display:none; text-align: center;">
+              <p style="font-size: 0.85rem; margin-bottom: 12px; color: #4a5568">Scan QR Code or Enter UPI ID</p>
+              <div style="width: 110px; height: 110px; background: #edf2f7; border: 1px solid #cbd5e0; margin: 0 auto 16px; display:flex; align-items:center; justify-content:center; color:#a0aec0; border-radius: 8px; font-size:0.8rem;">
+                [ DEMO QR ]
+              </div>
+              <input type="text" class="rp-input" placeholder="username@upi" value="demo@testupi" style="text-align: center;" readonly>
+           </div>
+           
+           <div id="rp-netbanking-view" class="rp-view" style="display:none;">
+              <p style="font-size: 0.85rem; margin-bottom: 12px; color: #4a5568">Select Bank</p>
+              <select class="rp-input" style="appearance: none; background: white;">
+                <option>HDFC Bank (Demo)</option>
+                <option>SBI Demo Bank</option>
+                <option>ICICI Demo Bank</option>
+                <option>Axis Demo Bank</option>
+              </select>
+           </div>
+           
+           <button class="rp-btn" id="rp-btn-pay" onclick="simulatePayment(this)">
+             Pay Now
+           </button>
+           
+           <div style="text-align:center; font-size:0.7rem; color:#a0aec0; margin-top:16px;">
+             🔒 Secured by Razorpay Demo
+           </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="pay-alert" class="alert"></div>
+    <div id="order-id-display" style="display:none;"></div>
+    
+    <p style="text-align:center;margin-top:20px;font-size:.75rem;color:var(--accent-dim)">
+      Your seat lock is active. It will automatically release if the timer runs out.
+    </p>
+  </div>
+
+  <div class="expired-state" id="expired-state">
+    <div style="font-size:3rem;margin-bottom:24px">⌛</div>
+    <h3>Payment Window Expired</h3>
+    <p style="margin-top:12px">Your seat has been released. Please start a new registration.</p>
+    <a href="/user" class="btn btn-outline mt-4" style="display:inline-flex">Try Again →</a>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script>
+const params = new URLSearchParams(window.location.search);
+const orderId = params.get('order');
+const timeoutMins = parseInt(params.get('timeout') || '5');
+const totalSecs = timeoutMins * 60;
+let secsLeft = totalSecs;
+let timerInterval = null;
+const circumference = 2 * Math.PI * 54;
+
+document.getElementById('order-id-display').textContent = `Order ID: ${orderId || 'Unknown'}`;
+
+function startTimer() {
+  const arc = document.getElementById('timer-arc');
+  timerInterval = setInterval(() => {
+    secsLeft--;
+    const mins = Math.floor(secsLeft / 60);
+    const secs = secsLeft % 60;
+    document.getElementById('timer-display').textContent = `${mins}:${String(secs).padStart(2,'0')}`;
+    const progress = (secsLeft / totalSecs);
+    arc.style.strokeDashoffset = circumference * (1 - progress);
+
+    if (secsLeft <= 60) arc.style.stroke = 'var(--error)';
+    if (secsLeft <= 0) {
+      clearInterval(timerInterval);
+      showExpired();
+    }
+  }, 1000);
+}
+
+function showExpired() {
+  document.getElementById('checkout-active').style.display = 'none';
+  document.getElementById('expired-state').style.display = 'block';
+  gsap.from('#expired-state', { opacity:0, scale:0.95, duration:0.5, ease:'power2.out' });
+}
+
+function switchMethod(e, method) {
+  document.querySelectorAll('.rp-method').forEach(el => el.classList.remove('active'));
+  e.currentTarget.classList.add('active');
+  document.querySelectorAll('.rp-view').forEach(el => el.style.display = 'none');
+  document.getElementById('rp-' + method + '-view').style.display = 'block';
+}
+
+function simulatePayment(btn) {
+  btn.textContent = 'Processing...';
+  btn.style.opacity = '0.7';
+  btn.disabled = true;
+  setTimeout(() => {
+    confirmPayment();
+  }, 1000);
+}
+
+async function confirmPayment() {
+  if (!orderId) { showAlert('No order ID found. Please restart registration.', 'error'); return; }
+  const r = await fetch('/api/register/confirm-payment', {
+    method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({orderId})
+  });
+  const d = await r.json();
+  if (d.ok) {
+    clearInterval(timerInterval);
+    document.getElementById('rp-btn-pay').textContent = 'Success! Redirecting...';
+    document.getElementById('rp-btn-pay').style.background = '#38a169';
+    setTimeout(() => {
+      window.location.href = `/user/confirm?order=${orderId}`;
+    }, 800);
+  } else if (d.code === 'TIMEOUT') {
+    showExpired();
+  } else {
+    showAlert(d.error, 'error');
+    document.getElementById('rp-btn-pay').textContent = 'Pay Now';
+    document.getElementById('rp-btn-pay').disabled = false;
+    document.getElementById('rp-btn-pay').style.opacity = '1';
+  }
+}
+
+function showAlert(msg, type) {
+  const el = document.getElementById('pay-alert');
+  el.textContent = msg; el.className = `alert alert-${type} show`;
+}
+
+// Load order details
+async function loadOrder() {
+  // Show placeholder details
+  if (orderId) {
+    document.getElementById('order-details').innerHTML = `
+      <div class="payment-row"><span class="label">Order ID</span><span>${orderId.slice(0,8).toUpperCase()}</span></div>
+      <div class="payment-row"><span class="label">Type</span><span>Paid Entry</span></div>
+      <div class="payment-row"><span class="label">Timeout</span><span>${timeoutMins} minutes</span></div>
+    `;
+  }
+}
+
+// Animate entrance
+gsap.from('.checkout-box', { opacity:0, y:30, duration:0.7, ease:'power2.out' });
+loadOrder();
+startTimer();
+</script>
+</body>
+</html>

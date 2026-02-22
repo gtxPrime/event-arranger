@@ -1,16 +1,20 @@
 # 🎫 Event Arranger - LocalHost Ticketing System
 
+[![Localhost](https://img.shields.io/badge/Powered%20By-Localhost-black?style=for-the-badge&logo=target)](https://localhosthq.com/)
 [![GitHub Stars](https://img.shields.io/github/stars/gtxPrime/event-arranger?style=social)](https://github.com/gtxPrime/event-arranger)
 [![Node.js Version](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen)](https://nodejs.org)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-A comprehensive, full-stack event management and ticketing system built for local events. Manage registrations, generate tickets with QR codes, handle gate entries with a built-in scanner, and oversee everything from a powerful admin dashboard.
+**Core Infrastructure for [Localhosthq.com](https://localhosthq.com/) - A Global Media & Startup Lab.**
+
+Event Arranger is a comprehensive, full-stack ticketing system purpose-built for the **Localhost** community—a global network empowering young creatives, high schoolers, and undergraduate students. This system manages registrations and ticketing for labs, festivals, and events globally.
 
 ---
 
 ## 🚀 Live Demo & Repository
 
 **GitHub Repository:** [https://github.com/gtxPrime/event-arranger](https://github.com/gtxPrime/event-arranger)
+**Organization:** [Localhost Media & Startup Lab](https://localhosthq.com/)
 
 ---
 

@@ -275,11 +275,12 @@ router.post("/approve/:id", requireAdmin, async (req, res) => {
     .get(reg.id);
   if (!existing) {
     const qrHash = generateQRHash(reg.id);
+    const ticketId = uuid();
     _db
       .prepare(
         "INSERT INTO tickets (id,registration_id,qr_hash,used,generated_at,guest_code_id) VALUES (?,?,?,0,?,?)",
       )
-      .run(uuid(), reg.id, qrHash, now, reg.guest_code_id || null);
+      .run(ticketId, reg.id, qrHash, now, reg.guest_code_id || null);
     _db
       .prepare(
         "UPDATE registrations SET status='confirmed', updated_at=? WHERE id=?",
@@ -288,7 +289,9 @@ router.post("/approve/:id", requireAdmin, async (req, res) => {
     const updated = _db
       .prepare("SELECT * FROM registrations WHERE id = ?")
       .get(reg.id);
-    sendTicketConfirmation(updated, null, null).catch(console.error);
+
+    const qrDataUrl = await QRCode.toDataURL(qrHash);
+    sendTicketConfirmation(updated, ticketId, qrDataUrl).catch(console.error);
   }
 
   writeAudit(_db, req, "APPROVE", reg.id, { previousStatus: reg.status });
@@ -324,12 +327,13 @@ router.post("/reissue/:id", requireAdmin, async (req, res) => {
 
   // Issue new
   const qrHash = generateQRHash(reg.id);
+  const ticketId = uuid();
   const now = Date.now();
   _db
     .prepare(
       "INSERT INTO tickets (id,registration_id,qr_hash,used,generated_at,guest_code_id) VALUES (?,?,?,0,?,?)",
     )
-    .run(uuid(), reg.id, qrHash, now, reg.guest_code_id || null);
+    .run(ticketId, reg.id, qrHash, now, reg.guest_code_id || null);
   _db
     .prepare(
       "UPDATE registrations SET status='confirmed', updated_at=? WHERE id=?",
@@ -339,7 +343,9 @@ router.post("/reissue/:id", requireAdmin, async (req, res) => {
   const updated = _db
     .prepare("SELECT * FROM registrations WHERE id = ?")
     .get(reg.id);
-  sendTicketConfirmation(updated, null, null).catch(console.error);
+
+  const qrDataUrl = await QRCode.toDataURL(qrHash);
+  sendTicketConfirmation(updated, ticketId, qrDataUrl).catch(console.error);
   writeAudit(_db, req, "REISSUE", reg.id, {});
   res.json({ ok: true });
 });
@@ -525,16 +531,19 @@ router.post(
       .run(guestCode.id);
 
     const qrHash = generateQRHash(regId);
+    const ticketId = uuid();
     _db
       .prepare(
         "INSERT INTO tickets (id,registration_id,qr_hash,used,generated_at,guest_code_id) VALUES (?,?,?,0,?,?)",
       )
-      .run(uuid(), regId, qrHash, now, guestCode.id);
+      .run(ticketId, regId, qrHash, now, guestCode.id);
 
     const reg = _db
       .prepare("SELECT * FROM registrations WHERE id = ?")
       .get(regId);
-    sendTicketConfirmation(reg, null, null).catch(console.error);
+
+    const qrDataUrl = await QRCode.toDataURL(qrHash);
+    sendTicketConfirmation(reg, ticketId, qrDataUrl).catch(console.error);
     writeAudit(_db, req, "ADMIN_GENERATED_QR", regId, { name, email, serial });
 
     res.json({ ok: true, serial, registrationId: regId, qrHash });
@@ -677,16 +686,19 @@ router.post(
           );
 
         const qrHash = generateQRHash(regId);
+        const ticketId = uuid();
         _db
           .prepare(
             "INSERT INTO tickets (id,registration_id,qr_hash,used,generated_at) VALUES (?,?,?,0,?)",
           )
-          .run(uuid(), regId, qrHash, now);
+          .run(ticketId, regId, qrHash, now);
 
         const reg = _db
           .prepare("SELECT * FROM registrations WHERE id = ?")
           .get(regId);
-        sendTicketConfirmation(reg, null, null).catch(console.error);
+
+        const qrDataUrl = await QRCode.toDataURL(qrHash);
+        sendTicketConfirmation(reg, ticketId, qrDataUrl).catch(console.error);
         results.push({ email, serial, status: "created" });
       } catch (e) {
         results.push({ email, error: e.message });

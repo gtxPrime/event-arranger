@@ -5,207 +5,125 @@
 [![Node.js Version](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen)](https://nodejs.org)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-**Core Infrastructure for [Localhosthq.com](https://localhosthq.com/) - A Global Media & Startup Lab.**
+**Robust, Zero-Dependency Infrastructure for [Localhosthq.com](https://localhosthq.com/) - A Global Media & Startup Lab.**
 
-Event Arranger is a comprehensive, full-stack ticketing system purpose-built for the **Localhost** community—a global network empowering young creatives, high schoolers, and undergraduate students. This system manages registrations and ticketing for labs, festivals, and events globally.
-
----
-
-## 🚀 Live Demo & Application Links
-
-- **User Registration Portal:** [https://localhost.isthismyportfolio.site/user](https://localhost.isthismyportfolio.site/user)
-- **Admin Dashboard:** [https://localhost.isthismyportfolio.site/admin](https://localhost.isthismyportfolio.site/admin)
-- **Gate Scanner:** [https://localhost.isthismyportfolio.site/scanner](https://localhost.isthismyportfolio.site/scanner)
-- **Special Guest Access:** [https://localhost.isthismyportfolio.site/guest](https://localhost.isthismyportfolio.site/guest) (Access code required)
-
-### 🔐 Demo Credentials
-
-| Role              | Username | Password      |
-| :---------------- | :------- | :------------ |
-| **Administrator** | `admin`  | `changeme123` |
-
-> **Note:** These are the default credentials. Please ensure you change them in your production `.env` file.
+Event Arranger is an industrial-grade, full-stack ticketing engine designed to handle high-traffic event registrations, automated lucky draws, and secure gate management. Built for the **Localhost** community, it simplifies the complex logistics of managing global labs and creative festivals.
 
 ---
 
-**Organization:** [Localhost Media & Startup Lab](https://localhosthq.com/)
-**Owner:** [gtxPrime](https://github.com/gtxPrime)
+## 🚀 Ecosystem Overview
+
+- **👤 User Portal:** [localhost.isthismyportfolio.site/user](https://localhost.isthismyportfolio.site/user)  
+  _High-performance landing page with interactive tiers and parallax visuals._
+- **🛠 Admin Dashboard:** [localhost.isthismyportfolio.site/admin](https://localhost.isthismyportfolio.site/admin)  
+  _Command center for settings, statistics, guest management, and manual draws._
+- **📷 Gate Scanner:** [localhost.isthismyportfolio.site/scanner](https://localhost.isthismyportfolio.site/scanner)  
+  _Optimized mobile PWA for instant QR validation with square camera cropping._
+- **🔒 Özel Access:** [localhost.isthismyportfolio.site/guest](https://localhost.isthismyportfolio.site/guest)  
+  _Invite-only registration flow via encrypted guest codes._
 
 ---
 
-## ✨ Features
+## ✨ Core Pillars
 
-### 👤 User Interface
+### 1. Robust Architecture (Zero-Native)
 
-- **Modern Landing Page:** Stunning UI for event discovery and registration.
-- **Dynamic Registration:** Flexible forms for user details.
-- **Secure Checkout:** Integration-ready for various payment methods.
-- **Instant Confirmation:** Automatic ticket generation and email notifications.
+Unlike systems relying on `better-sqlite3` or `bcrypt`, this engine uses **Pure WebAssembly (WASM)**.
 
-### 🛠 Admin Dashboard
+- **Database:** `node-sqlite3-wasm` ensures the project runs on any shared hosting (Hostinger/cPanel) without requiring C++ build tools or native compilation.
+- **Security:** Pure-JS `bcryptjs` for portable password hashing.
 
-- **Real-time Statistics:** Monitor registrations, ticket sales, and check-ins.
-- **Guest Management:** View, export, and manage guest lists.
-- **Admin Controls:** Secure access to sensitive event data.
-- **Background Jobs:** Automated payment expiry and lucky draw schedulers.
+### 2. Intelligent Automation
 
-### 📷 Gate Scanner
+- **Auto-Draw System:** Integrated scheduler selects winners from "pending_draw" pool based on custom offsets.
+- **Payment Expiry:** Automated cleanup job releases locked seats if payments aren't confirmed within the X-minute window.
+- **Bulk Processing:** Industrial CSV parser to import hundreds of registrations with automatic ticket issuance and email delivery.
 
-- **Web-based QR Scanner:** No extra hardware needed, uses any mobile browser.
-- **Instant Validation:** Fast ticket verification with real-time feedback.
-- **Entry Tracking:** Logs every entry for post-event analysis.
+### 3. Security & Integrity
 
-### 🔒 Security & Backend
+- **HMAC QR Signing:** Every ticket QR code is cryptographically signed using a unique registration secret to prevent tampering or forged entries.
+- **Audit Logging:** Every administrative action (Approvals, Revocations, Settings changes) is logged with the admin's ID and timestamp.
+- **Adaptive Rate Limiting:** Granular limits for Auth, Registration, and Scanning to mitigate DDoS and brute-force attempts.
 
-- **Google OAuth:** Seamless login for admins and users.
-- **Rate Limiting:** Protects API routes from abuse.
-- **SQLite WASM:** High-performance database without complex setup.
-- **Firebase Integration:** Secure storage and authentication options.
+### 4. Premium Communication
 
----
-
-## 🛠 Tech Stack
-
-| Component         | Technology                                                                                                                 |
-| :---------------- | :------------------------------------------------------------------------------------------------------------------------- |
-| **Backend**       | [Node.js](https://nodejs.org/) with [Express](https://expressjs.com/)                                                      |
-| **Database**      | [SQLite WASM](https://www.sqlite.org/wasm) (zero-dependency storage)                                                       |
-| **Auth**          | [Passport.js](https://www.passportjs.org/) (Google OAuth)                                                                  |
-| **Email**         | [Nodemailer](https://nodemailer.com/)                                                                                      |
-| **QR Generation** | [qrcode](https://www.npmjs.com/package/qrcode)                                                                             |
-| **File Uploads**  | [Multer](https://github.com/expressjs/multer)                                                                              |
-| **Security**      | [BcryptJS](https://www.npmjs.com/package/bcryptjs), [Express-Rate-Limit](https://www.npmjs.com/package/express-rate-limit) |
+- **Redesigned Email Engine:** Beautifully crafted "Member Pass" templates featuring:
+  - Responsive CID-embedded images (Banner & Logo).
+  - High-precision QR codes.
+  - Plain-text fallbacks for 100% deliverability.
 
 ---
 
-## 💻 Local Setup
+## 📁 Project Structure
 
-1. **Clone the Repository:**
+```bash
+├── public/                 # Static Frontend Assets
+│   ├── user/               # Main registration portal & checkout
+│   ├── admin/              # Management dashboard
+│   ├── scanner/            # QR validation PWA
+│   ├── guest/              # Invite-only registration flow
+│   └── shared/             # Global CSS, Images (Banner/Logo)
+├── server/                 # Backend Core (Node.js/Express)
+│   ├── routes/             # API Endpoints (Auth, Scan, Admin, etc.)
+│   ├── middleware/         # Audit Logs, Rate Limiting, Proxy Trust
+│   ├── config/             # Email templates & Env wrappers
+│   ├── utils/              # SQLite-WASM shim, QR HMAC, Serial gens
+│   └── db.js               # Migrations & Seeders
+├── data/                   # Dynamic storage (SQLite .db)
+├── .env.example            # Environment template
+└── send-demo-email.js      # Mail system verification tool
+```
 
+---
+
+## 💻 Installation & Deployment
+
+### Local Development
+
+1. **Clone & Install:**
    ```bash
    git clone https://github.com/gtxPrime/event-arranger.git
-   cd event-arranger
-   ```
-
-2. **Install Dependencies:**
-
-   ```bash
    npm install
    ```
+2. **Environment:** Copy `.env.example` to `.env` and fill in SMTP/Google credentials.
+3. **Run:** `npm run dev` (starts on port 3000 by default).
 
-3. **Environment Setup:**
-   Create a `.env` file in the root directory (use `.env.example` as a template):
+### 🌐 cPanel / Shared Hosting (The Professional Way)
 
-   ```env
-   PORT=3000
-   SESSION_SECRET=your_secret_here
-   GOOGLE_CLIENT_ID=your_id
-   GOOGLE_CLIENT_SECRET=your_secret
-   # ... add other required keys
-   ```
+This project is pre-optimized for cPanel Node.js Selector.
 
-4. **Run the Application:**
-
-   ```bash
-   # Development mode (watching)
-   npm run dev
-
-   # Production mode
-   npm start
-   ```
+1. **Prepare:** Run `npm run build-zip` (or manually zip everything except `node_modules`).
+2. **Upload:** Use cPanel File Manager to upload and extract in your app directory.
+3. **App Setup:**
+   - Application Root: `/your-path`
+   - Startup File: `server/index.js`
+4. **Data Folder:** Ensure the `data/` directory exists and has write permissions.
 
 ---
 
-## 🌐 Hosting Guide
+## 🛠 Management CLI
 
-### 1. Shared Hosting (cPanel / Hostinger / Bluehost)
+The system includes utility scripts for maintenance:
 
-Most modern shared hosting providers support Node.js applications.
-
-1. **Setup Node.js App:** Look for "Setup Node.js App" in your cPanel.
-2. **Upload Files:** Upload all files (excluding `node_modules`).
-3. **Environment Variables:** Set the `.env` variables in the Node.js setup interface.
-4. **Install Modules:** Use the "Run NPM Install" button in the cPanel interface.
-5. **Start:** Set the "Application startup file" to `server/index.js`.
-
-### 2. VPS Hosting (DigitalOcean / AWS / Linode)
-
-1. **Connect:** SSH into your server.
-2. **Install Node & PM2:**
-   ```bash
-   curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
-   sudo apt-get install -y nodejs
-   sudo npm install -g pm2
-   ```
-3. **Deploy Code:** Clone your repo and install dependencies.
-4. **Run with PM2:**
-   ```bash
-   pm2 start server/index.js --name event-arranger
-   pm2 startup && pm2 save
-   ```
-5. **Nginx Reverse Proxy:** Configure Nginx to point your domain to the port specified in `.env`.
-
-### 3. PaaS (Render / Railway / Northflank)
-
-Simply connect your GitHub repository to these services. They will auto-detect the `package.json` and deploy it instantly.
-
-- **Render:** Choose "Web Service" -> Connect Repo -> Set Publish Directory to `./` and Start Command to `npm start`.
-
----
-
-## 🛠 Detailed Service Setup
-
-### 📧 1. Mail Service (SMTP)
-
-To send ticket confirmations, update your `.env` with your SMTP details.
-
-- **Shared Hosting (cPanel):**
-  - Host: `mail.yourdomain.com`
-  - Port: `465` (SSL) or `587` (TLS)
-  - User: `your-email@yourdomain.com`
-  - Password: `your-email-password`
-
-### 🔥 2. Firebase Setup
-
-#### Web Config (Frontend)
-
-1. Go to [Firebase Console](https://console.firebase.google.com/) and create a project.
-2. Add a **Web App** and copy the configuration to your `.env`:
-   - `FIREBASE_API_KEY`, `FIREBASE_AUTH_DOMAIN`, `FIREBASE_PROJECT_ID`, `FIREBASE_APP_ID`
-
-#### Admin SDK (Server)
-
-1. In Firebase Settings > Service Accounts, click **"Generate New Private Key"**.
-2. Download the JSON file and upload it to your server's `server/` folder.
-3. Update `.env`: `FIREBASE_SERVICE_ACCOUNT_PATH=./server/your-file-name.json`.
-
-### 🔑 3. Google OAuth Login
-
-1. In [Google Cloud Console](https://console.cloud.google.com/), go to **APIs & Services > Credentials**.
-2. Create an **OAuth 2.0 Client ID** (Web application).
-3. **Authorized Redirect URIs:** Add `https://yourdomain.com/api/auth/google/callback`.
-4. **Authorized JavaScript Origins:** Add `https://yourdomain.com`.
-5. Copy the **Client ID** and **Client Secret** to your `.env`.
-6. **Firebase Sync:** In the Firebase Console under Authentication > Sign-in method, ensure Google is enabled and the Authorized Domains list includes your production domain.
+- **Test Mail:** `node send-demo-email.js`  
+  _Verifies SMTP connectivity and image CID embedding._
+- **Database Migration:** Automatically runs on startup via `server/db.js`.
+- **Admin Reset:** Use the `.env` default variables to regain access to the dashboard.
 
 ---
 
 ## 🤝 Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-1. Fork the Project
-2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the Branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
+1. Fork the Project.
+2. Create Feature Branch.
+3. Commit Changes.
+4. Open Pull Request.
 
 ---
 
-## 📄 License
+## 📄 License & Credits
 
-Distributed under the MIT License. See `LICENSE` for more information.
+Developed by **[gtxPrime](https://github.com/gtxPrime)** for **[Localhost Media Lab](https://localhosthq.com/)**.  
+Distributed under the **MIT License**.
 
----
-
-**Developed with ❤️ by [gtxPrime](https://github.com/gtxPrime)**
+_"The journey begins at the intersection of practice and technology."_

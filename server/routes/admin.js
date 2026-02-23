@@ -769,4 +769,31 @@ router.get("/ticket/:regId", requireAdmin, (req, res) => {
   res.json({ ticket: t, registration: r });
 });
 
+// ── SMTP Test ─────────────────────────────────────────────────────────────
+router.post("/test-email", requireAdmin, async (req, res) => {
+  const { email } = req.body;
+  if (!email) return res.status(400).json({ error: "Email required" });
+  try {
+    const result = await sendMail({
+      to: email,
+      subject: "LocalHost — SMTP Test Check",
+      text: "If you are reading this, your SMTP server configuration on LocalHost is working perfectly!",
+    });
+    res.json({
+      ok: true,
+      message: "Email sent successfully!",
+      messageId: result.messageId,
+    });
+  } catch (e) {
+    console.error("[SMTP Test Error]", e);
+    res.status(500).json({
+      error: e.message,
+      code: e.code,
+      response: e.response,
+      command: e.command,
+      stack: e.stack,
+    });
+  }
+});
+
 module.exports = { router, setDb };

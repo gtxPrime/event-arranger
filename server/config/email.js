@@ -32,7 +32,23 @@ function getTransporter() {
 
 async function sendMail({ to, subject, text, html }) {
   const t = getTransporter();
-  return t.sendMail({ from: env.EMAIL_FROM, to, subject, text, html });
+  try {
+    const info = await t.sendMail({
+      from: env.EMAIL_FROM,
+      to,
+      subject,
+      text,
+      html,
+    });
+    console.log(`[Email] Sent to ${to}: ${info.messageId}`);
+    return info;
+  } catch (error) {
+    console.error("[Email Error] Failed to send to", to);
+    console.error(" - Error Message:", error.message);
+    if (error.code) console.error(" - Code:", error.code);
+    if (error.response) console.error(" - Response:", error.response);
+    throw error;
+  }
 }
 
 async function sendTicketConfirmation(registration, ticket, qrDataUrl) {

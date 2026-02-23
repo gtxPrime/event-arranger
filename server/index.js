@@ -13,8 +13,8 @@ const authRoute = require("./routes/auth");
 const registerRoute = require("./routes/register");
 const guestRoute = require("./routes/guest");
 const scanRoute = require("./routes/scan");
-const adminRoute = require('./routes/admin');
-const ticketsRoute = require('./routes/tickets');
+const adminRoute = require("./routes/admin");
+const ticketsRoute = require("./routes/tickets");
 
 // Utils that need DB
 const serial = require("./utils/serial");
@@ -35,6 +35,7 @@ ticketsRoute.setDb(db);
 
 // ── Express App ────────────────────────────────────────────────────────────
 const app = express();
+app.set("trust proxy", 1);
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -135,4 +136,3 @@ app.listen(env.PORT, () => {
 });
 
 module.exports = app;
-

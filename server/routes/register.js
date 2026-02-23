@@ -161,11 +161,15 @@ router.post("/free", async (req, res) => {
 
     // If approved (FCFS), issue ticket immediately
     if (result.status === "approved") {
-      await issueTicket(reg);
+      const { ticketId, qrHash } = await issueTicket(reg);
       const updatedReg = _db
         .prepare("SELECT * FROM registrations WHERE id = ?")
         .get(regId);
-      sendTicketConfirmation(updatedReg, null, null).catch(console.error);
+
+      const qrDataUrl = await QRCode.toDataURL(qrHash);
+      sendTicketConfirmation(updatedReg, ticketId, qrDataUrl).catch(
+        console.error,
+      );
       return res.json({
         ok: true,
         status: "confirmed",
@@ -401,11 +405,13 @@ router.post("/confirm-payment", async (req, res) => {
 
     const issued = [];
     for (const reg of regs) {
-      await issueTicket(reg);
+      const { ticketId, qrHash } = await issueTicket(reg);
       const updated = _db
         .prepare("SELECT * FROM registrations WHERE id = ?")
         .get(reg.id);
-      sendTicketConfirmation(updated, null, null).catch(console.error);
+
+      const qrDataUrl = await QRCode.toDataURL(qrHash);
+      sendTicketConfirmation(updated, ticketId, qrDataUrl).catch(console.error);
       issued.push({ id: reg.id, serial: reg.serial, email: reg.email });
     }
 
@@ -420,12 +426,10 @@ router.post("/confirm-payment", async (req, res) => {
 router.post("/volunteer", async (req, res) => {
   try {
     if (getSetting("volunteer_enabled") !== "1") {
-      return res
-        .status(403)
-        .json({
-          error: "Volunteer registration is closed",
-          code: "VOL_CLOSED",
-        });
+      return res.status(403).json({
+        error: "Volunteer registration is closed",
+        code: "VOL_CLOSED",
+      });
     }
 
     const user = getUser(req);
@@ -493,11 +497,13 @@ router.post("/volunteer", async (req, res) => {
     const reg = _db
       .prepare("SELECT * FROM registrations WHERE id = ?")
       .get(regId);
-    await issueTicket(reg);
+    const { ticketId, qrHash } = await issueTicket(reg);
     const updated = _db
       .prepare("SELECT * FROM registrations WHERE id = ?")
       .get(regId);
-    sendTicketConfirmation(updated, null, null).catch(console.error);
+
+    const qrDataUrl = await QRCode.toDataURL(qrHash);
+    sendTicketConfirmation(updated, ticketId, qrDataUrl).catch(console.error);
 
     res.json({ ok: true, status: "confirmed", serial, registrationId: regId });
   } catch (e) {

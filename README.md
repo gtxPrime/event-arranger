@@ -24,33 +24,50 @@ Event Arranger is an industrial-grade, full-stack ticketing engine designed to h
 
 ---
 
-## ✨ Core Pillars
+## ✨ Comprehensive Feature Set
 
-### 1. Robust Architecture (Zero-Native)
+We have integrated an extensive array of ticketing mechanisms to fit any modern event need. All limits, timers, and workflows are controllable via the Admin Dashboard.
 
-Unlike systems relying on `better-sqlite3` or `bcrypt`, this engine uses **Pure WebAssembly (WASM)**.
+### 1. Robust Ticket Registration Types
 
-- **Database:** `node-sqlite3-wasm` ensures the project runs on any shared hosting (Hostinger/cPanel) without requiring C++ build tools or native compilation.
-- **Security:** Pure-JS `bcryptjs` for portable password hashing.
+- **Free Tickets (First-Come-First-Serve + Lucky Draw):**
+  - Registrations within the `fcfs_limit` are instantly approved.
+  - Any subsequent registrations automatically placed in a `pending_draw` waitlist.
+- **Paid & VIP Access (Time-Bound Payment Systems):**
+  - Select multiple tickets per order.
+  - Strict timestamped **Payment Locks**. If an order is not completed within `checkout_timeout_mins` (e.g., 5 mins), the reservation automatically expires and seats are recycled.
+  - Automatic triggering of waitlist promo emails when paid tiers open up.
+- **Special Invites / Guest Lists:**
+  - Generate short tracking URL parameters (e.g. `?code=ABC234`) or long-form encrypted codes via the Admin panel.
+  - Admins can configure: limit of registrations per code, `plus_one` accessibility, expiration dates, and toggles for Auto-Approve vs Manual Review.
+- **Volunteer Ticketing:**
+  - Restricted codes tied precisely to specific volunteer email addresses to ensure strict access control.
 
-### 2. Intelligent Automation
+### 2. Intelligent Automation & Workflows
 
-- **Auto-Draw System:** Integrated scheduler selects winners from "pending_draw" pool based on custom offsets.
-- **Payment Expiry:** Automated cleanup job releases locked seats if payments aren't confirmed within the X-minute window.
-- **Bulk Processing:** Industrial CSV parser to import hundreds of registrations with automatic ticket issuance and email delivery.
+- **Automated Lucky Draw Executions:**
+  - Automated background scheduler automatically fires the lucky draw before the event (controlled by `draw_run_offset_mins` before `event_start_epoch`).
+  - Determines winners based on total remaining free capacity limits.
+- **Time-Bound Email & Waitlist Promotions:**
+  - Automatically dispatches promo invites to the next person in line if another user times out on their payment cart.
+- **Bulk Processing & CSV Imports:**
+  - Upload hundreds of guest details via CSV. The system will mass-generate UUIDs, serialize passes, and autonomously dispatch Member Pass ticket QR codes out via SMTP in seconds.
 
-### 3. Security & Integrity
+### 3. State-of-the-Art Premium Communication
 
-- **HMAC QR Signing:** Every ticket QR code is cryptographically signed using a unique registration secret to prevent tampering or forged entries.
-- **Audit Logging:** Every administrative action (Approvals, Revocations, Settings changes) is logged with the admin's ID and timestamp.
-- **Adaptive Rate Limiting:** Granular limits for Auth, Registration, and Scanning to mitigate DDoS and brute-force attempts.
+Say goodbye to generic text notifications! All participant communication now utilizes state-of-the-art **Premium HTML Templates**, utilizing an incredibly sleek Dark-Mode "Member Pass" layout.
 
-### 4. Premium Communication
+- **Ticket / QR Confirmations**: Attendees receive a stunning HTML email complete with CID-embedded visual event banners, logos, QR codes, and dynamically injected tier labels.
+- **Lucky Draw Status Alerts**:
+  - **Winners ($)** receive a beautifully themed digital celebration detailing their pass confirmation.
+  - **Rejections / Draw Losers** receive a highly aesthetic, polite rejection notice with the exact same premium branding to maintain brand consistency and keep them engaged for the next event.
+- **Special Invite Promotions**: Waitlist notifications leverage the unified visual identity to inspire urgency in completing paid transactions.
 
-- **Redesigned Email Engine:** Beautifully crafted "Member Pass" templates featuring:
-  - Responsive CID-embedded images (Banner & Logo).
-  - High-precision QR codes.
-  - Plain-text fallbacks for 100% deliverability.
+### 4. Integrity & High Security
+
+- **QR Cryptography (`QR_HMAC_SECRET`)**: Every generated barcode contains an embedded HMAC signature mapping to its exact generation millisecond. The Gate Scanner re-hashes offline/online to instantly reject forged duplicates.
+- **Cascade Revocation**: If a Master Guest List code is disabled by an Admin, _all individual QR tickets generated using that code instantly invalidate._
+- **Zero-Native Operations**: Operates exclusively on pure WebAssembly SQLite. No `better-sqlite3` build chain issues, meaning deploying to CPanel, Hostinger, or a Pi is 100% painless.
 
 ---
 
@@ -66,7 +83,7 @@ Unlike systems relying on `better-sqlite3` or `bcrypt`, this engine uses **Pure 
 ├── server/                 # Backend Core (Node.js/Express)
 │   ├── routes/             # API Endpoints (Auth, Scan, Admin, etc.)
 │   ├── middleware/         # Audit Logs, Rate Limiting, Proxy Trust
-│   ├── config/             # Email templates & Env wrappers
+│   ├── config/             # Premium HTML Email templates & Env wrappers
 │   ├── utils/              # SQLite-WASM shim, QR HMAC, Serial gens
 │   └── db.js               # Migrations & Seeders
 ├── data/                   # Dynamic storage (SQLite .db)
@@ -106,7 +123,7 @@ This project is pre-optimized for cPanel Node.js Selector.
 The system includes utility scripts for maintenance:
 
 - **Test Mail:** `node send-demo-email.js`  
-  _Verifies SMTP connectivity and image CID embedding._
+  _Verifies SMTP connectivity and tests multi-CID image embedding to preview templates._
 - **Database Migration:** Automatically runs on startup via `server/db.js`.
 - **Admin Reset:** Use the `.env` default variables to regain access to the dashboard.
 
@@ -124,6 +141,6 @@ The system includes utility scripts for maintenance:
 ## 📄 License & Credits
 
 Developed by **[gtxPrime](https://github.com/gtxPrime)** for **[Localhost Media Lab](https://localhosthq.com/)**.  
-Distributed under the **MIT License**.
+Distributed under good faith.
 
 _"The journey begins at the intersection of practice and technology."_

@@ -11,6 +11,17 @@ function getDb() {
   const dbPath = path.resolve(__dirname, "..", env.DB_PATH);
   fs.mkdirSync(path.dirname(dbPath), { recursive: true });
 
+  // Clear stale wasm-sqlite locks if they exist (common on shared hosting after a crash)
+  const lockPath = dbPath + ".lock";
+  if (fs.existsSync(lockPath)) {
+    try {
+      fs.rmdirSync(lockPath, { recursive: true });
+      console.log("[DB] Cleared stale lock directory");
+    } catch (e) {
+      console.warn("[DB] Could not clear lock directory:", e.message);
+    }
+  }
+
   db = new Database(dbPath);
 
   migrate(db);

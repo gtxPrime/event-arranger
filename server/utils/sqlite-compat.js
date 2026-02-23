@@ -52,8 +52,9 @@ class Statement {
 class Database {
   constructor(pathOrMemory) {
     this._raw = new WasmDatabase(pathOrMemory);
+    this._raw.run("PRAGMA busy_timeout = 5000");
     // Enable WAL and foreign keys once at open time
-    // this._raw.run("PRAGMA journal_mode = WAL");
+    this._raw.run("PRAGMA journal_mode = WAL");
     this._raw.run("PRAGMA foreign_keys = ON");
   }
 

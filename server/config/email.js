@@ -34,7 +34,7 @@ function getTransporter() {
   return transporter;
 }
 
-async function sendMail({ to, subject, text, html }) {
+async function sendMail({ to, subject, text, html, attachments }) {
   const t = getTransporter();
   try {
     const info = await t.sendMail({
@@ -43,6 +43,7 @@ async function sendMail({ to, subject, text, html }) {
       subject,
       text,
       html,
+      attachments,
     });
     console.log(`[Email] Sent to ${to}: ${info.messageId}`);
     return info;
@@ -61,7 +62,7 @@ async function sendTicketConfirmation(registration, ticketId, qrDataUrl) {
     {
       free: "Free Entry",
       paid: "Paid Entry",
-      vip: "VIP / Paid Entry",
+      vip: "VIP Access",
       guest: "Special Guest",
       volunteer: "Volunteer",
     }[registration.ticket_type] || registration.ticket_type;
@@ -72,100 +73,112 @@ async function sendTicketConfirmation(registration, ticketId, qrDataUrl) {
     <head>
       <meta charset="utf-8">
       <style>
-        body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; background-color: #f0f4f3; margin: 0; padding: 0; -webkit-font-smoothing: antialiased; }
-        .wrapper { width: 100%; table-layout: fixed; background-color: #f0f4f3; padding: 40px 0; }
-        .main { background-color: #ffffff; margin: 0 auto; width: 100%; max-width: 600px; border-spacing: 0; color: #2f4f4f; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 40px rgba(47,79,79,0.1); }
-        .banner { width: 100%; height: 200px; object-fit: cover; }
-        .header { background-color: #2f4f4f; padding: 50px 20px; text-align: center; color: #f5f5dc; }
-        .logo-img { width: 60px; height: 60px; margin-bottom: 15px; border-radius: 12px; }
-        .header h1 { margin: 0; font-size: 26px; letter-spacing: 3px; text-transform: uppercase; font-weight: 300; }
-        .header .subtitle { font-size: 10px; opacity: 0.7; margin-top: 8px; letter-spacing: 2px; }
-        .content { padding: 50px 40px; line-height: 1.8; }
-        .greeting { font-size: 22px; font-weight: 700; margin-bottom: 24px; color: #1a3030; }
-        .ticket-card { background: linear-gradient(135deg, #e8f0ef 0%, #d2e4e1 100%); border-radius: 20px; padding: 40px; text-align: center; margin: 30px 0; border: 1px solid rgba(47,79,79,0.1); }
-        .qr-wrapper { background: #ffffff; padding: 20px; display: inline-block; border-radius: 16px; margin-bottom: 25px; box-shadow: 0 8px 24px rgba(47,79,79,0.08); }
-        .serial { font-family: 'Courier New', Courier, monospace; font-size: 20px; font-weight: bold; color: #2f4f4f; letter-spacing: 2px; background: rgba(255,255,255,0.5); padding: 8px 16px; border-radius: 6px; display: inline-block; }
-        .info-grid { width: 100%; margin-top: 30px; border-top: 1px solid rgba(47,79,79,0.1); padding-top: 30px; border-collapse: collapse; }
-        .info-item { padding: 10px 0; }
-        .info-label { font-size: 10px; text-transform: uppercase; color: #6b8481; letter-spacing: 1.5px; font-weight: 700; margin-bottom: 4px; }
-        .info-value { font-size: 15px; font-weight: 600; color: #1a3030; }
-        .btn-box { text-align: center; margin-top: 40px; }
-        .btn { display: inline-block; background: #2f4f4f; color: #f5f5dc !important; padding: 16px 32px; text-decoration: none; border-radius: 12px; font-weight: 700; font-size: 14px; letter-spacing: 1px; box-shadow: 0 4px 12px rgba(47,79,79,0.2); }
-        .footer { text-align: center; font-size: 12px; color: #6b8481; padding: 30px 20px; }
-        .footer a { color: #2f4f4f; text-decoration: none; font-weight: 600; }
-        .notice { font-size: 13px; color: #6b8481; padding: 20px; background: #f9fbfb; border-radius: 8px; margin-top: 30px; border-left: 4px solid #2f4f4f; }
+        body { margin: 0; padding: 0; background-color: #0c0a09; }
+        .wrapper { 
+          width: 100%; 
+          background-color: #0c0a09; 
+          background-image: url('cid:banner'); 
+          background-size: cover; 
+          background-position: center; 
+          padding: 80px 20px; 
+          font-family: 'Helvetica Neue', Arial, sans-serif;
+        }
+        .card { 
+          max-width: 480px; 
+          margin: 0 auto; 
+          background-color: #ffffff; 
+          border-radius: 40px; 
+          overflow: hidden; 
+          box-shadow: 0 50px 100px rgba(0,0,0,0.8);
+        }
+        .card-header { padding: 50px 30px 0; text-align: center; }
+        .logo-img { width: 50px; height: 50px; border-radius: 14px; }
+        .card-body { padding: 40px; text-align: center; color: #2f4f4f; }
+        .qr-box { background: #fff; padding: 25px; border-radius: 24px; display: inline-block; box-shadow: 0 15px 35px rgba(47,79,79,0.08); margin-bottom: 30px; border: 1px solid #f0f0f0; }
+        .serial { font-family: 'Courier New', Courier, monospace; font-size: 24px; font-weight: bold; color: #1a3030; letter-spacing: 3px; }
+        .label { font-size: 10px; text-transform: uppercase; color: #6b8481; letter-spacing: 2px; font-weight: 700; margin-bottom: 6px; }
+        .value { font-size: 18px; font-weight: 600; color: #1a3030; }
+        .info-table { width: 100%; margin: 40px 0; border-top: 1px solid #efefef; padding-top: 30px; border-collapse: collapse; }
+        .btn { display: block; background: #2f4f4f; color: #f5f5dc !important; padding: 22px; text-decoration: none; border-radius: 20px; font-weight: 700; font-size: 15px; letter-spacing: 2px; margin-top: 40px; }
+        .footer { text-align: center; padding: 50px 20px; color: #6b8481; font-size: 12px; }
+        .footer a { color: #f5f5dc; text-decoration: none; font-weight: 600; }
       </style>
     </head>
-    <body>
-      <center class="wrapper">
-        <table class="main">
+    <body style="margin:0; padding:0; background-color:#0c0a09;">
+      <center class="wrapper" style="width:100%; background-color:#0c0a09; background-image:url('cid:banner'); background-size:cover; background-position:center; padding:80px 0;">
+        <table align="center" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 500px;">
           <tr>
-            <td>
-              <img src="cid:banner" class="banner" alt="LocalHost Festival">
-            </td>
-          </tr>
-          <tr>
-            <td class="header">
-              <img src="cid:logo" class="logo-img" alt="LocalHost Logo">
-              <h1>LOCAL&middot;HOST</h1>
-              <div class="subtitle">MEDIA &times; STARTUP LAB</div>
-            </td>
-          </tr>
-          <tr>
-            <td class="content">
-              <div class="greeting">Hi ${registration.name || "there"},</div>
-              <p>Your journey with <strong>LocalHost Festival 2026</strong> begins here. We've reserved your spot at our global lab for creators and innovators.</p>
-              
-              <div class="ticket-card">
-                <div class="qr-wrapper">
-                  <img src="cid:qrcode" width="220" height="220" alt="Ticket QR Code">
+            <td style="padding: 10px 20px;">
+              <div class="card" style="background-color: #ffffff; border-radius: 40px; overflow: hidden; box-shadow: 0 40px 80px rgba(0,0,0,0.6);">
+                <div class="card-header" style="padding: 50px 30px 0; text-align: center;">
+                  <img src="cid:logo" class="logo-img" width="50" height="50" style="border-radius: 14px;">
+                  <h2 style="margin: 20px 0 5px; font-size: 26px; letter-spacing: 2px; color: #1a3030; font-family: serif;">MEMBER PASS</h2>
+                  <div style="font-size: 11px; color: #6b8481; text-transform: uppercase; letter-spacing: 3px; font-weight: 700;">LocalHost Festival 2026</div>
                 </div>
-                <br>
-                <div class="serial">${serial}</div>
-                <div style="margin-top: 15px; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #6b8481;">Pass ID</div>
-              </div>
+                
+                <div class="card-body" style="padding: 50px 40px; text-align: center;">
+                  <div class="qr-box" style="background:#fff; padding:25px; border-radius:24px; display:inline-block; border:1px solid #f0f0f0; margin-bottom:35px;">
+                    <img src="cid:qrcode" width="220" height="220" alt="QR Code">
+                  </div>
+                  
+                  <div class="serial" style="font-family:monospace; font-size:24px; font-weight:bold; color:#1a3030; letter-spacing:3px;">${serial}</div>
+                  
+                  <table width="100%" style="margin: 45px 0; border-top: 1px solid #efefef; padding-top: 35px; border-collapse: collapse;">
+                    <tr>
+                      <td align="left" width="50%">
+                        <div style="font-size:10px; text-transform:uppercase; color:#6b8481; letter-spacing:2px; font-weight:700; margin-bottom:6px;">Attendee</div>
+                        <div style="font-size:18px; font-weight:600; color:#1a3030;">${registration.name}</div>
+                      </td>
+                      <td align="right" width="50%">
+                        <div style="font-size:10px; text-transform:uppercase; color:#6b8481; letter-spacing:2px; font-weight:700; margin-bottom:6px;">Pass Type</div>
+                        <div style="font-size:18px; font-weight:600; color:#1a3030;">${typeLabel}</div>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td align="left" style="padding-top: 30px;">
+                        <div style="font-size:10px; text-transform:uppercase; color:#6b8481; letter-spacing:2px; font-weight:700; margin-bottom:6px;">Location</div>
+                        <div style="font-size:18px; font-weight:600; color:#1a3030;">Main Lab</div>
+                      </td>
+                      <td align="right" style="padding-top: 30px;">
+                        <div style="font-size:10px; text-transform:uppercase; color:#6b8481; letter-spacing:2px; font-weight:700; margin-bottom:6px;">Date</div>
+                        <div style="font-size:18px; font-weight:600; color:#1a3030;">Mar 15</div>
+                      </td>
+                    </tr>
+                  </table>
 
-              <table class="info-grid">
-                <tr>
-                  <td class="info-item" width="50%">
-                    <div class="info-label">Entry Type</div>
-                    <div class="info-value">${typeLabel}</div>
-                  </td>
-                  <td class="info-item" width="50%">
-                    <div class="info-label">Date</div>
-                    <div class="info-value">March 15, 2026</div>
-                  </td>
-                </tr>
-                <tr>
-                  <td class="info-item">
-                    <div class="info-label">Plus One</div>
-                    <div class="info-value">${registration.plus_one ? "Guaranteed" : "Standard"}</div>
-                  </td>
-                  <td class="info-item">
-                    <div class="info-label">Location</div>
-                    <div class="info-value">Main Lab Area</div>
-                  </td>
-                </tr>
-              </table>
-
-              <div class="btn-box">
-                <a href="${env.SITE_URL || "https://localhost.isthismyportfolio.site"}/api/tickets/view/${ticketId}" class="btn">DOWNLOAD / PRINT PASS →</a>
+                  <a href="${env.SITE_URL || "https://localhost.isthismyportfolio.site"}/api/tickets/view/${ticketId}" style="display:block; background:#2f4f4f; color:#f5f5dc; padding:22px; text-decoration:none; border-radius:20px; font-weight:700; font-size:15px; letter-spacing:2px; margin-top:10px;">DOWNLOAD TICKET</a>
+                  
+                  <p style="font-size: 13px; color: #6b8481; margin-top: 40px; line-height: 1.6; font-style: italic;">"The journey begins at the intersection of practice and technology."</p>
+                </div>
               </div>
-
-              <div class="notice">
-                <strong>Important:</strong> Present this QR code or a printed copy at the gate. If you have a +1, your companion must enter with you. Pass is non-transferable and valid for one-time entry only.
-              </div>
+            </td>
+          </tr>
+          <tr>
+            <td style="text-align:center; padding:50px 20px; color:#6b8481; font-size:12px;">
+              <div style="margin-bottom: 10px;">&copy; 2026 LocalHost Media Lab</div>
+              <a href="https://localhosthq.com" style="color: #f5f5dc; text-decoration: none; border-bottom: 1px solid rgba(245,245,220,0.3);">localhosthq.com</a>
             </td>
           </tr>
         </table>
-        <div class="footer">
-          <p>&copy; 2026 LocalHost Media Lab. Built by Creators, for Creators.<br/>
-          <a href="https://localhosthq.com">localhosthq.com</a> | <a href="${env.SITE_URL || "https://localhost.isthismyportfolio.site"}/user">Member Portal</a></p>
-        </div>
       </center>
     </body>
     </html>
   `;
+
+  const text = `
+Hi ${registration.name || "there"},
+
+Your ticket for LocalHost Festival 2026 is confirmed!
+
+PASS ID: ${serial}
+ENTRY TYPE: ${typeLabel}
+
+DOWNLOAD / PRINT YOUR PASS:
+${env.SITE_URL || "https://localhost.isthismyportfolio.site"}/api/tickets/view/${ticketId}
+
+See you there!
+— LocalHost Team
+  `.trim();
 
   // Attachments
   const qrBase64 = qrDataUrl ? qrDataUrl.split(",")[1] : null;
@@ -174,12 +187,12 @@ async function sendTicketConfirmation(registration, ticketId, qrDataUrl) {
   const attachments = [
     {
       filename: "logo.png",
-      path: path.join(sharedDir, "favicon.png"), // Use the generated PNG logo as fallback for email
+      path: path.join(sharedDir, "logo.png"),
       cid: "logo",
     },
     {
       filename: "banner.webp",
-      path: path.join(sharedDir, "banner.webp"),
+      path: path.join(sharedDir, "banner.webp"), // This is the high-quality visual from the user screen
       cid: "banner",
     },
   ];
@@ -196,32 +209,152 @@ async function sendTicketConfirmation(registration, ticketId, qrDataUrl) {
   await sendMail({
     to: registration.email,
     subject: `[Pass Confirmed] ${serial} — LocalHost Festival`,
+    text,
     html,
     attachments,
   });
 }
 
+function getBaseHtml(title, preheader, contentHtml) {
+  return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <style>
+        body { margin: 0; padding: 0; background-color: #0c0a09; }
+        .wrapper { 
+          width: 100%; 
+          background-color: #0c0a09; 
+          background-image: url('cid:banner'); 
+          background-size: cover; 
+          background-position: center; 
+          padding: 80px 20px; 
+          font-family: 'Helvetica Neue', Arial, sans-serif;
+        }
+        .card { 
+          max-width: 480px; 
+          margin: 0 auto; 
+          background-color: #ffffff; 
+          border-radius: 40px; 
+          overflow: hidden; 
+          box-shadow: 0 50px 100px rgba(0,0,0,0.8);
+        }
+        .card-header { padding: 50px 30px 0; text-align: center; }
+        .logo-img { width: 50px; height: 50px; border-radius: 14px; }
+        .card-body { padding: 40px; text-align: center; color: #2f4f4f; }
+        .btn { display: block; background: #2f4f4f; color: #f5f5dc !important; padding: 22px; text-decoration: none; border-radius: 20px; font-weight: 700; font-size: 15px; letter-spacing: 2px; margin-top: 40px; }
+        .footer { text-align: center; padding: 50px 20px; color: #6b8481; font-size: 12px; }
+        .footer a { color: #f5f5dc; text-decoration: none; font-weight: 600; }
+      </style>
+    </head>
+    <body style="margin:0; padding:0; background-color:#0c0a09;">
+      <center class="wrapper" style="width:100%; background-color:#0c0a09; background-image:url('cid:banner'); background-size:cover; background-position:center; padding:80px 0;">
+        <table align="center" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 500px;">
+          <tr>
+            <td style="padding: 10px 20px;">
+              <div class="card" style="background-color: #ffffff; border-radius: 40px; overflow: hidden; box-shadow: 0 40px 80px rgba(0,0,0,0.6);">
+                <div class="card-header" style="padding: 50px 30px 0; text-align: center;">
+                  <img src="cid:logo" class="logo-img" width="50" height="50" style="border-radius: 14px;">
+                  <h2 style="margin: 20px 0 5px; font-size: 26px; letter-spacing: 2px; color: #1a3030; font-family: serif;">${title}</h2>
+                  <div style="font-size: 11px; color: #6b8481; text-transform: uppercase; letter-spacing: 3px; font-weight: 700;">${preheader}</div>
+                </div>
+                <div class="card-body" style="padding: 50px 40px; text-align: center;">
+                  ${contentHtml}
+                  <p style="font-size: 13px; color: #6b8481; margin-top: 40px; line-height: 1.6; font-style: italic;">"The journey begins at the intersection of practice and technology."</p>
+                </div>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td style="text-align:center; padding:50px 20px; color:#6b8481; font-size:12px;">
+              <div style="margin-bottom: 10px;">&copy; 2026 LocalHost Media Lab</div>
+              <a href="https://localhosthq.com" style="color: #f5f5dc; text-decoration: none; border-bottom: 1px solid rgba(245,245,220,0.3);">localhosthq.com</a>
+            </td>
+          </tr>
+        </table>
+      </center>
+    </body>
+    </html>
+  `;
+}
+
+function getBaseAttachments() {
+  const sharedDir = path.join(__dirname, "../../public/shared");
+  return [
+    {
+      filename: "logo.png",
+      path: path.join(sharedDir, "logo.png"),
+      cid: "logo",
+    },
+    {
+      filename: "banner.webp",
+      path: path.join(sharedDir, "banner.webp"),
+      cid: "banner",
+    },
+  ];
+}
+
 async function sendDrawWinnerEmail(registration) {
+  const text = `Hi ${registration.name || "there"},\n\nGreat news — you have been selected in the lucky draw!\nYour ticket (${registration.serial}) has been confirmed. Check your next email for your QR code.\n\n— LocalHost Team`;
+
+  const htmlContent = `
+    <h3 style="color:#1a3030; font-size:22px;">Congratulations! 🎉</h3>
+    <p style="font-size:16px; color:#2f4f4f; line-height:1.5; margin:20px 0;">
+      Hi ${registration.name || "there"},<br><br>
+      Great news — you have been selected in the lucky draw! Your ticket (<strong>${registration.serial}</strong>) is now confirmed.
+    </p>
+    <p style="font-size:16px; color:#2f4f4f; line-height:1.5;">Check your next email for your Member Pass QR code.</p>
+  `;
+
   await sendMail({
     to: registration.email,
     subject: "You won the LocalHost Lucky Draw! 🎉",
-    text: `Hi ${registration.name || "there"},\n\nGreat news — you have been selected in the lucky draw!\nYour ticket (${registration.serial}) has been confirmed. Check your next email for your QR code.\n\n— LocalHost Team`,
+    text,
+    html: getBaseHtml("LUCKY DRAW", "LocalHost Festival 2026", htmlContent),
+    attachments: getBaseAttachments(),
   });
 }
 
 async function sendDrawLoserEmail(email, name) {
+  const text = `Hi ${name || "there"},\n\nThank you for entering the draw. Unfortunately, you were not selected this time.\nKeep an eye on our socials for future events.\n\n— LocalHost Team`;
+
+  const htmlContent = `
+    <h3 style="color:#1a3030; font-size:22px;">Draw Results</h3>
+    <p style="font-size:16px; color:#2f4f4f; line-height:1.5; margin:20px 0;">
+      Hi ${name || "there"},<br><br>
+      Thank you for entering the draw. Unfortunately, you were not selected this time.
+    </p>
+    <p style="font-size:16px; color:#2f4f4f; line-height:1.5;">Keep an eye on our socials for future events and upcoming opportunities.</p> `;
+
   await sendMail({
     to: email,
     subject: "LocalHost Draw Result",
-    text: `Hi ${name || "there"},\n\nThank you for entering the draw. Unfortunately, you were not selected this time.\nKeep an eye on our socials for future events.\n\n— LocalHost Team`,
+    text,
+    html: getBaseHtml("DRAW STATUS", "LocalHost Festival 2026", htmlContent),
+    attachments: getBaseAttachments(),
   });
 }
 
 async function sendWaitlistPromoEmail(registration) {
+  const siteUrl = env.SITE_URL || "https://localhost.isthismyportfolio.site";
+  const text = `Hi ${registration.name || "there"},\n\nA paid ticket slot just opened up. Head to the registration page to complete your purchase before it fills up again.\n\n— LocalHost Team`;
+
+  const htmlContent = `
+    <h3 style="color:#1a3030; font-size:22px;">A Seat Opened Up!</h3>
+    <p style="font-size:16px; color:#2f4f4f; line-height:1.5; margin:20px 0;">
+      Hi ${registration.name || "there"},<br><br>
+      A paid ticket slot just opened up. Complete your purchase before it fills up again!
+    </p>
+    <a href="${siteUrl}/user/checkout" class="btn" style="display:block; background:#2f4f4f; color:#f5f5dc !important; padding:22px; text-decoration:none; border-radius:20px; font-weight:700; font-size:15px; letter-spacing:2px; margin-top:30px;">REGISTER NOW</a>
+  `;
+
   await sendMail({
     to: registration.email,
     subject: "A paid seat opened up — your chance to register!",
-    text: `Hi ${registration.name || "there"},\n\nA paid ticket slot just opened up. Head to the registration page to complete your purchase before it fills up again.\n\n— LocalHost Team`,
+    text,
+    html: getBaseHtml("VIP ACCESS", "LocalHost Festival 2026", htmlContent),
+    attachments: getBaseAttachments(),
   });
 }
 

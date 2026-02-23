@@ -4,7 +4,7 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>Gate Scanner — LocalHost Festival</title>
-<link rel="icon" type="image/png" href="/shared/favicon.png" />
+<link rel="icon" type="image/svg+xml" href="/shared/favicon.svg" />
 <link rel="stylesheet" href="/shared/styles.css"/>
 <style>
 * { user-select: none; }
@@ -26,36 +26,45 @@ header {
 
 /* Camera / QR area */
 #camera-container {
-  position:relative; flex:1; display:flex; align-items:center; justify-content:center;
-  background:#000; overflow:hidden;
+  position:relative; flex:1; background:#000; overflow:hidden;
 }
-#reader { width:100%; height:100%; }
+#reader {
+  width:100% !important; height:100% !important; border:none !important;
+}
+/* Force the video to be centered and fill the container */
+#reader video {
+  width:100% !important; height:100% !important; object-fit:cover !important;
+}
+/* Hide all library-injected UI elements (shading, buttons, etc) */
+#reader > div:not(:first-child) { display: none !important; }
+#reader__scan_region { border: none !important; }
+#reader__dashboard { display: none !important; }
 
-/* Scan overlay frame */
+/* Clean, centered scanner overlay */
 .scan-frame {
-  position:absolute; inset:0; pointer-events:none; z-index:10;
-  display:flex; align-items:center; justify-content:center;
+  position:absolute; top:50%; left:50%; width:280px; height:280px;
+  transform:translate(-50%, -50%);
+  border:2px solid rgba(255,255,255,0.2);
+  pointer-events:none; z-index:100;
 }
-.frame-box {
-  width:260px; height:260px; position:relative;
+.scan-frame::before, .scan-frame::after,
+.scan-tl, .scan-tr, .scan-bl, .scan-br {
+  content:''; position:absolute; width:40px; height:40px; border-color:var(--accent); border-style:solid;
 }
-.frame-box::before, .frame-box::after,
-.frame-tl, .frame-tr, .frame-bl, .frame-br {
-  content:''; position:absolute; width:32px; height:32px; border-color:var(--accent); border-style:solid;
-}
-.frame-box::before { top:0; left:0; border-width:3px 0 0 3px; }
-.frame-box::after  { top:0; right:0; border-width:3px 3px 0 0; }
-.frame-bl { bottom:0; left:0; border-width:0 0 3px 3px; }
-.frame-br { bottom:0; right:0; border-width:0 3px 3px 0; }
+/* Just the 4 corners for a premium feel */
+.scan-tl { top:-2px; left:-2px; border-width:4px 0 0 4px; }
+.scan-tr { top:-2px; right:-2px; border-width:4px 4px 0 0; }
+.scan-bl { bottom:-2px; left:-2px; border-width:0 0 4px 4px; }
+.scan-br { bottom:-2px; right:-2px; border-width:0 4px 4px 0; }
+
 .scan-line {
-  position:absolute; left:0; right:0; height:2px;
+  position:absolute; left:2px; right:2px; height:2px; top:0;
   background:linear-gradient(to right, transparent, var(--accent), transparent);
-  animation: scanline 2.5s ease-in-out infinite;
+  animation:scanline 2.5s ease-in-out infinite;
 }
 @keyframes scanline {
-  0%   { top:0; opacity:1; }
-  90%  { top:100%; opacity:1; }
-  100% { top:100%; opacity:0; }
+  0% { top:0 }
+  100% { top:100% }
 }
 
 /* Result overlay */
@@ -124,10 +133,9 @@ header {
 <div id="camera-container">
   <div id="reader"></div>
   <div class="scan-frame">
-    <div class="frame-box">
-      <div class="frame-bl"></div><div class="frame-br"></div>
-      <div class="scan-line"></div>
-    </div>
+    <div class="scan-tl"></div><div class="scan-tr"></div>
+    <div class="scan-bl"></div><div class="scan-br"></div>
+    <div class="scan-line"></div>
   </div>
 </div>
 
@@ -223,9 +231,9 @@ updateNetwork();
 const html5QrCode = new Html5Qrcode('reader');
 
 const scanConfig = {
-  fps: 15,
-  qrbox: { width: 260, height: 260 },
-  aspectRatio: window.innerHeight / window.innerWidth,
+  fps: 30,
+  qrbox: { width: 280, height: 280 },
+  aspectRatio: 1.0, 
   disableFlip: false,
 };
 

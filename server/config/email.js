@@ -1,4 +1,5 @@
 const nodemailer = require("nodemailer");
+const path = require("path");
 const env = require("./env");
 
 let transporter = null;
@@ -76,6 +77,7 @@ async function sendTicketConfirmation(registration, ticketId, qrDataUrl) {
         body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; background-color: #f0f4f3; margin: 0; padding: 0; -webkit-font-smoothing: antialiased; }
         .wrapper { width: 100%; table-layout: fixed; background-color: #f0f4f3; padding: 40px 0; }
         .main { background-color: #ffffff; margin: 0 auto; width: 100%; max-width: 600px; border-spacing: 0; color: #2f4f4f; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 40px rgba(47,79,79,0.1); }
+        .banner { width: 100%; height: 200px; object-fit: cover; }
         .header { background-color: #2f4f4f; padding: 50px 20px; text-align: center; color: #f5f5dc; }
         .logo-img { width: 60px; height: 60px; margin-bottom: 15px; border-radius: 12px; }
         .header h1 { margin: 0; font-size: 26px; letter-spacing: 3px; text-transform: uppercase; font-weight: 300; }
@@ -89,6 +91,8 @@ async function sendTicketConfirmation(registration, ticketId, qrDataUrl) {
         .info-item { padding: 10px 0; }
         .info-label { font-size: 10px; text-transform: uppercase; color: #6b8481; letter-spacing: 1.5px; font-weight: 700; margin-bottom: 4px; }
         .info-value { font-size: 15px; font-weight: 600; color: #1a3030; }
+        .btn-box { text-align: center; margin-top: 40px; }
+        .btn { display: inline-block; background: #2f4f4f; color: #f5f5dc !important; padding: 16px 32px; text-decoration: none; border-radius: 12px; font-weight: 700; font-size: 14px; letter-spacing: 1px; box-shadow: 0 4px 12px rgba(47,79,79,0.2); }
         .footer { text-align: center; font-size: 12px; color: #6b8481; padding: 30px 20px; }
         .footer a { color: #2f4f4f; text-decoration: none; font-weight: 600; }
         .notice { font-size: 13px; color: #6b8481; padding: 20px; background: #f9fbfb; border-radius: 8px; margin-top: 30px; border-left: 4px solid #2f4f4f; }
@@ -97,6 +101,11 @@ async function sendTicketConfirmation(registration, ticketId, qrDataUrl) {
     <body>
       <center class="wrapper">
         <table class="main">
+          <tr>
+            <td>
+              <img src="cid:banner" class="banner" alt="LocalHost Festival">
+            </td>
+          </tr>
           <tr>
             <td class="header">
               <img src="cid:logo" class="logo-img" alt="LocalHost Logo">
@@ -111,7 +120,7 @@ async function sendTicketConfirmation(registration, ticketId, qrDataUrl) {
               
               <div class="ticket-card">
                 <div class="qr-wrapper">
-                  <img src="cid:qrcode" width="200" height="200" alt="Ticket QR Code">
+                  <img src="cid:qrcode" width="220" height="220" alt="Ticket QR Code">
                 </div>
                 <br>
                 <div class="serial">${serial}</div>
@@ -141,15 +150,19 @@ async function sendTicketConfirmation(registration, ticketId, qrDataUrl) {
                 </tr>
               </table>
 
+              <div class="btn-box">
+                <a href="${env.SITE_URL || "https://localhost.isthismyportfolio.site"}/api/tickets/view/${ticketId}" class="btn">DOWNLOAD / PRINT PASS →</a>
+              </div>
+
               <div class="notice">
-                <strong>Important:</strong> Present this QR code at the gate. If you have a +1, your companion must enter with you. Pass is non-transferable and valid for one-time entry only.
+                <strong>Important:</strong> Present this QR code or a printed copy at the gate. If you have a +1, your companion must enter with you. Pass is non-transferable and valid for one-time entry only.
               </div>
             </td>
           </tr>
         </table>
         <div class="footer">
           <p>&copy; 2026 LocalHost Media Lab. Built by Creators, for Creators.<br/>
-          <a href="https://localhosthq.com">localhosthq.com</a> | <a href="https://localhost.isthismyportfolio.site">Member Portal</a></p>
+          <a href="https://localhosthq.com">localhosthq.com</a> | <a href="${env.SITE_URL || "https://localhost.isthismyportfolio.site"}/user">Member Portal</a></p>
         </div>
       </center>
     </body>
@@ -158,13 +171,18 @@ async function sendTicketConfirmation(registration, ticketId, qrDataUrl) {
 
   // Attachments
   const qrBase64 = qrDataUrl ? qrDataUrl.split(",")[1] : null;
-  const logoPath = path.join(__dirname, "../../public/shared/favicon.png");
+  const sharedDir = path.join(__dirname, "../../public/shared");
 
   const attachments = [
     {
       filename: "logo.png",
-      path: logoPath,
+      path: path.join(sharedDir, "favicon.png"), // Use the generated PNG logo as fallback for email
       cid: "logo",
+    },
+    {
+      filename: "banner.webp",
+      path: path.join(sharedDir, "banner.webp"),
+      cid: "banner",
     },
   ];
 

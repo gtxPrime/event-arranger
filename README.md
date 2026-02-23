@@ -7,7 +7,7 @@
 
 **Robust, Zero-Dependency Infrastructure for [Localhosthq.com](https://localhosthq.com/) - A Global Media & Startup Lab.**
 
-Event Arranger is an industrial-grade, full-stack ticketing engine designed to handle high-traffic event registrations, automated lucky draws, and secure gate management. Built for the **Localhost** community, it simplifies the complex logistics of managing global labs and creative festivals.
+Event Arranger is an industrial-grade, full-stack ticketing engine designed to handle high-traffic event registrations, automated random selections, and secure gate management. Built for the **Localhost** community, it simplifies the complex logistics of managing global labs and creative festivals.
 
 ---
 
@@ -30,7 +30,7 @@ We have integrated an extensive array of ticketing mechanisms to fit any modern 
 
 ### 1. Robust Ticket Registration Types
 
-- **Free Tickets (First-Come-First-Serve + Lucky Draw):**
+- **Free Tickets (First-Come-First-Serve + Random Selection):**
   - Registrations within the `fcfs_limit` are instantly approved.
   - Any subsequent registrations automatically placed in a `pending_draw` waitlist.
 - **Paid & VIP Access (Time-Bound Payment Systems):**
@@ -45,8 +45,8 @@ We have integrated an extensive array of ticketing mechanisms to fit any modern 
 
 ### 2. Intelligent Automation & Workflows
 
-- **Automated Lucky Draw Executions:**
-  - Automated background scheduler automatically fires the lucky draw before the event (controlled by `draw_run_offset_mins` before `event_start_epoch`).
+- **Automated Random Selection Executions:**
+  - Automated background scheduler automatically fires the random selection before the event (controlled by `draw_run_offset_mins` before `event_start_epoch`).
   - Determines winners based on total remaining free capacity limits.
 - **Time-Bound Email & Waitlist Promotions:**
   - Automatically dispatches promo invites to the next person in line if another user times out on their payment cart.
@@ -58,9 +58,9 @@ We have integrated an extensive array of ticketing mechanisms to fit any modern 
 Say goodbye to generic text notifications! All participant communication now utilizes state-of-the-art **Premium HTML Templates**, utilizing an incredibly sleek Dark-Mode "Member Pass" layout.
 
 - **Ticket / QR Confirmations**: Attendees receive a stunning HTML email complete with CID-embedded visual event banners, logos, QR codes, and dynamically injected tier labels.
-- **Lucky Draw Status Alerts**:
+- **Selection Status Alerts**:
   - **Winners ($)** receive a beautifully themed digital celebration detailing their pass confirmation.
-  - **Rejections / Draw Losers** receive a highly aesthetic, polite rejection notice with the exact same premium branding to maintain brand consistency and keep them engaged for the next event.
+  - **Not Selected** receive a highly aesthetic, polite rejection notice with the exact same premium branding to maintain brand consistency and keep them engaged for the next event.
 - **Special Invite Promotions**: Waitlist notifications leverage the unified visual identity to inspire urgency in completing paid transactions.
 
 ### 4. Integrity & High Security

@@ -8,7 +8,7 @@ function setDb(db) {
 }
 
 /**
- * Run the lucky draw:
+ * Run the random selection:
  * - Randomly select `count` from pending_draw pool
  * - Promote winners to approved
  * - Mark losers as draw_lost

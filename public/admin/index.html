@@ -118,7 +118,7 @@ body { background:var(--bg); display:flex; min-height:100vh; }
   <div style="padding:16px 0;flex:1">
     <div class="nav-link active" onclick="showPanel('overview')" id="nav-overview"><span class="icon">◈</span> Overview</div>
     <div class="nav-link" onclick="showPanel('registrations')" id="nav-registrations"><span class="icon">◉</span> Registrations</div>
-    <div class="nav-link" onclick="showPanel('draw')" id="nav-draw"><span class="icon">◐</span> Lucky Draw</div>
+    <div class="nav-link" onclick="showPanel('draw')" id="nav-draw"><span class="icon">◐</span> Random Draw</div>
     <div class="nav-link" onclick="showPanel('guest-codes')" id="nav-guest-codes"><span class="icon">◆</span> Guest Codes</div>
     <div class="nav-link" onclick="showPanel('volunteer-codes')" id="nav-volunteer-codes"><span class="icon">◇</span> Volunteers</div>
     <div class="nav-link" onclick="showPanel('bulk')" id="nav-bulk"><span class="icon">▦</span> Bulk Upload</div>
@@ -184,9 +184,9 @@ body { background:var(--bg); display:flex; min-height:100vh; }
     </div>
   </div>
 
-  <!-- ── LUCKY DRAW ── -->
+  <!-- ── RANDOM SELECTION ── -->
   <div class="panel" id="panel-draw">
-    <h2 style="margin-bottom:8px">Lucky Draw</h2>
+    <h2 style="margin-bottom:8px">Random Selection</h2>
     <p>Run the draw to randomly select winners from the pending pool.</p>
     <div class="draw-box">
       <div class="draw-pool-count" id="draw-pool-count">—</div>
@@ -472,7 +472,7 @@ async function loadQuickToggles() {
     { key:'paid_enabled',      label:'Paid Tickets',         desc:'Allow paid ticket purchases' },
     { key:'vip_enabled',       label:'Special Guest Codes',  desc:'Enable VIP/guest URL codes' },
     { key:'volunteer_enabled', label:'Volunteer Codes',      desc:'Allow volunteer code registrations' },
-    { key:'draw_enabled',      label:'Lucky Draw UI',        desc:'Show draw entry option to users' },
+    { key:'draw_enabled',      label:'Random Draw UI',        desc:'Show draw entry option to users' },
     { key:'draw_accepting',    label:'Draw Entries Open',    desc:'Accept new entries into draw pool' },
   ];
   document.getElementById('quick-toggles').innerHTML = rows.map(r=>`
@@ -811,7 +811,7 @@ async function loadSettingsPanel() {
       { key:'paid_enabled',          label:'Paid Tickets Open',        type:'toggle' },
       { key:'vip_enabled',           label:'Special Guest Codes Active',type:'toggle'},
       { key:'volunteer_enabled',     label:'Volunteer Codes Active',   type:'toggle' },
-      { key:'draw_enabled',          label:'Lucky Draw UI Shown',      type:'toggle' },
+      { key:'draw_enabled',          label:'Draw UI Shown',      type:'toggle' },
       { key:'draw_accepting',        label:'Draw Entries Accepted',    type:'toggle' },
     ]},
     { title: '📊 Quotas & Prices', items: [
@@ -828,7 +828,7 @@ async function loadSettingsPanel() {
       { key:'event_start_datetime',  label:'Event Start Date & Time',  type:'datetime-local', epochKey:'event_start_epoch' },
       { key:'late_cutoff_mins',      label:'Late Entry Cutoff (minutes)',type:'number'},
     ]},
-    { title: '🎰 Lucky Draw Schedule', items: [
+    { title: '🎰 Random Draw Schedule', items: [
       { key:'draw_auto_run',         label:'Auto-Run Draw at Scheduled Time', type:'toggle' },
       { key:'draw_run_offset_mins',  label:'Run Draw X Minutes Before Event', type:'number'},
       { key:'draw_has_run',          label:'Draw Already Ran (toggle off to re-run)', type:'toggle'},

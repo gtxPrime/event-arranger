@@ -296,22 +296,26 @@ function getBaseAttachments() {
 }
 
 async function sendDrawWinnerEmail(registration) {
-  const text = `Hi ${registration.name || "there"},\n\nGreat news — you have been selected in the lucky draw!\nYour ticket (${registration.serial}) has been confirmed. Check your next email for your QR code.\n\n— LocalHost Team`;
+  const text = `Hi ${registration.name || "there"},\n\nGreat news — you have been selected in our random draw!\nYour ticket (${registration.serial}) has been confirmed. Check your next email for your QR code.\n\n— LocalHost Team`;
 
   const htmlContent = `
     <h3 style="color:#1a3030; font-size:22px;">Congratulations! 🎉</h3>
     <p style="font-size:16px; color:#2f4f4f; line-height:1.5; margin:20px 0;">
       Hi ${registration.name || "there"},<br><br>
-      Great news — you have been selected in the lucky draw! Your ticket (<strong>${registration.serial}</strong>) is now confirmed.
+      Great news — you have been selected in our random draw! Your ticket (<strong>${registration.serial}</strong>) is now confirmed.
     </p>
     <p style="font-size:16px; color:#2f4f4f; line-height:1.5;">Check your next email for your Member Pass QR code.</p>
   `;
 
   await sendMail({
     to: registration.email,
-    subject: "You won the LocalHost Lucky Draw! 🎉",
+    subject: "You've been selected! 🎉 — LocalHost Festival",
     text,
-    html: getBaseHtml("LUCKY DRAW", "LocalHost Festival 2026", htmlContent),
+    html: getBaseHtml(
+      "TICKET SELECTED",
+      "LocalHost Festival 2026",
+      htmlContent,
+    ),
     attachments: getBaseAttachments(),
   });
 }

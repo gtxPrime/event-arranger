@@ -350,7 +350,7 @@ router.post("/reissue/:id", requireAdmin, async (req, res) => {
   res.json({ ok: true });
 });
 
-// ── Run Lucky Draw ────────────────────────────────────────────────────────
+// ── Run Random Selection ────────────────────────────────────────────────────
 router.post("/run-draw", requireAdmin, async (req, res) => {
   const count = req.body.count ? parseInt(req.body.count) : undefined;
   try {

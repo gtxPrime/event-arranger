@@ -189,7 +189,7 @@ function seedDefaults(db) {
     vip_price: "999",
     event_start_epoch: "0",
     event_name: "LocalHost Festival",
-    // Lucky draw auto-schedule
+    // Random selection auto-schedule
     draw_auto_run: "1",
     draw_run_offset_mins: "120",
     draw_has_run: "0",

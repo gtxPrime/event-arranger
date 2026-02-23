@@ -108,7 +108,7 @@ router.post("/free", async (req, res) => {
         status = "approved";
         drawEntry = 0;
       } else {
-        // Phase 2: Lucky draw
+        // Phase 2: Random selection
         if (
           getSetting("draw_enabled") !== "1" ||
           getSetting("draw_accepting") !== "1"
@@ -153,7 +153,7 @@ router.post("/free", async (req, res) => {
     if (result.drawClosed)
       return res
         .status(403)
-        .json({ error: "Lucky draw is closed", code: "DRAW_CLOSED" });
+        .json({ error: "Random selection is closed", code: "DRAW_CLOSED" });
 
     const reg = _db
       .prepare("SELECT * FROM registrations WHERE id = ?")
@@ -185,7 +185,7 @@ router.post("/free", async (req, res) => {
       serial: result.serial,
       registrationId: regId,
       message:
-        "You are in the lucky draw! Results will be announced before the event.",
+        "You are in the random selection pool! Results will be announced before the event.",
     });
   } catch (e) {
     console.error("[Free Register Error]", e);

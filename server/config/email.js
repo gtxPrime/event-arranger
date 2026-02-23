@@ -55,8 +55,6 @@ async function sendMail({ to, subject, text, html }) {
   }
 }
 
-const path = require("path");
-
 async function sendTicketConfirmation(registration, ticketId, qrDataUrl) {
   const serial = registration.serial;
   const typeLabel =

@@ -11,10 +11,25 @@ Event Arranger is a comprehensive, full-stack ticketing system purpose-built for
 
 ---
 
-## 🚀 Live Demo & Repository
+## 🚀 Live Demo & Application Links
 
-**GitHub Repository:** [https://github.com/gtxPrime/event-arranger](https://github.com/gtxPrime/event-arranger)
+- **User Registration Portal:** [https://localhost.isthismyportfolio.site/user](https://localhost.isthismyportfolio.site/user)
+- **Admin Dashboard:** [https://localhost.isthismyportfolio.site/admin](https://localhost.isthismyportfolio.site/admin)
+- **Gate Scanner:** [https://localhost.isthismyportfolio.site/scanner](https://localhost.isthismyportfolio.site/scanner)
+- **Special Guest Access:** [https://localhost.isthismyportfolio.site/guest](https://localhost.isthismyportfolio.site/guest) (Access code required)
+
+### 🔐 Demo Credentials
+
+| Role              | Username | Password      |
+| :---------------- | :------- | :------------ |
+| **Administrator** | `admin`  | `changeme123` |
+
+> **Note:** These are the default credentials. Please ensure you change them in your production `.env` file.
+
+---
+
 **Organization:** [Localhost Media & Startup Lab](https://localhosthq.com/)
+**Owner:** [gtxPrime](https://github.com/gtxPrime)
 
 ---
 

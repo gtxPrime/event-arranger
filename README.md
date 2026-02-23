@@ -138,6 +138,43 @@ Simply connect your GitHub repository to these services. They will auto-detect t
 
 ---
 
+## 🛠 Detailed Service Setup
+
+### 📧 1. Mail Service (SMTP)
+
+To send ticket confirmations, update your `.env` with your SMTP details.
+
+- **Shared Hosting (cPanel):**
+  - Host: `mail.yourdomain.com`
+  - Port: `465` (SSL) or `587` (TLS)
+  - User: `your-email@yourdomain.com`
+  - Password: `your-email-password`
+
+### 🔥 2. Firebase Setup
+
+#### Web Config (Frontend)
+
+1. Go to [Firebase Console](https://console.firebase.google.com/) and create a project.
+2. Add a **Web App** and copy the configuration to your `.env`:
+   - `FIREBASE_API_KEY`, `FIREBASE_AUTH_DOMAIN`, `FIREBASE_PROJECT_ID`, `FIREBASE_APP_ID`
+
+#### Admin SDK (Server)
+
+1. In Firebase Settings > Service Accounts, click **"Generate New Private Key"**.
+2. Download the JSON file and upload it to your server's `server/` folder.
+3. Update `.env`: `FIREBASE_SERVICE_ACCOUNT_PATH=./server/your-file-name.json`.
+
+### 🔑 3. Google OAuth Login
+
+1. In [Google Cloud Console](https://console.cloud.google.com/), go to **APIs & Services > Credentials**.
+2. Create an **OAuth 2.0 Client ID** (Web application).
+3. **Authorized Redirect URIs:** Add `https://yourdomain.com/api/auth/google/callback`.
+4. **Authorized JavaScript Origins:** Add `https://yourdomain.com`.
+5. Copy the **Client ID** and **Client Secret** to your `.env`.
+6. **Firebase Sync:** In the Firebase Console under Authentication > Sign-in method, ensure Google is enabled and the Authorized Domains list includes your production domain.
+
+---
+
 ## 🤝 Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.

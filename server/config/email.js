@@ -11,6 +11,9 @@ function getTransporter() {
       port: env.SMTP_PORT,
       secure: env.SMTP_PORT === 465,
       auth: { user: env.SMTP_USER, pass: env.SMTP_PASS },
+      tls: {
+        rejectUnauthorized: false,
+      },
     });
     console.log("[Email] SMTP transporter configured");
   } else {
